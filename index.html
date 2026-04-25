@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1e40af">
+  <title>ByMEY HotTap</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --color-primary: #1e40af;
+      --color-primary-dark: #1e3a8a;
+      --color-secondary: #f59e0b;
+      --color-success: #16a34a;
+      --color-error: #dc2626;
+      --color-bg: #f8fafc;
+      --color-card: #ffffff;
+      --color-border: #e2e8f0;
+      --color-text: #0f172a;
+      --color-text-muted: #64748b;
+      --radius: 8px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.10);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--color-bg);
+      color: var(--color-text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .auth-wrapper {
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .logo__badge {
+      display: inline-block;
+      background: var(--color-primary);
+      color: #fff;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      padding: 10px 24px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-md);
+    }
+
+    .logo__subtitle {
+      margin-top: 8px;
+      font-size: 13px;
+      color: var(--color-text-muted);
+    }
+
+    .card {
+      background: var(--color-card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-md);
+      padding: 28px 24px;
+    }
+
+    .card__title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      color: var(--color-text);
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 6px;
+      color: var(--color-text);
+    }
+
+    .field input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius);
+      font-size: 15px;
+      font-family: 'Inter', sans-serif;
+      color: var(--color-text);
+      background: #fff;
+      transition: border-color 0.15s;
+      outline: none;
+    }
+
+    .field input:focus {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(30,64,175,0.10);
+    }
+
+    .field input.input--error {
+      border-color: var(--color-error);
+    }
+
+    .field-error {
+      display: block;
+      font-size: 12px;
+      color: var(--color-error);
+      margin-top: 4px;
+      min-height: 16px;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      background: var(--color-primary);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 15px;
+      font-weight: 700;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      transition: background 0.15s, opacity 0.15s;
+      margin-top: 8px;
+    }
+
+    .btn:hover:not(:disabled) { background: var(--color-primary-dark); }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .btn--loading::after {
+      content: '';
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255,255,255,0.5);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .alert {
+      padding: 10px 14px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .alert--error { background: #fef2f2; color: var(--color-error); border: 1px solid #fecaca; display: block; }
+    .alert--success { background: #f0fdf4; color: var(--color-success); border: 1px solid #bbf7d0; display: block; }
+
+    .switch-link {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 13px;
+      color: var(--color-text-muted);
+    }
+
+    .switch-link button {
+      background: none;
+      border: none;
+      color: var(--color-primary);
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 13px;
+      font-family: 'Inter', sans-serif;
+      text-decoration: underline;
+      padding: 0;
+    }
+
+    .panel { display: none; }
+    .panel.panel--active { display: block; }
+
+    .divider {
+      border: none;
+      border-top: 1px solid var(--color-border);
+      margin: 20px 0;
+    }
+
+    .terms-note {
+      font-size: 11px;
+      color: var(--color-text-muted);
+      text-align: center;
+      margin-top: 12px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Supabase yapılandırması — kendi değerlerinizle doldurun -->
+  <script>
+    window.__env = {
+      SUPABASE_URL: 'https://jjbtzgbqgqdjqyzbdgrt.supabase.co',
+      SUPABASE_ANON_KEY: 'sb_publishable_j2dUGqrTsSgD1DzHkhkExw_f-hmWa19'
+    };
+  </script>
+
+  <div class="auth-wrapper">
+
+    <div class="logo">
+      <div class="logo__badge">ByMEY</div>
+      <p class="logo__subtitle">HotTap Ölçüm Kartı</p>
+    </div>
+
+    <!-- GİRİŞ PANELİ -->
+    <div class="card panel panel--active" id="loginPanel">
+      <p class="card__title">Giriş Yap</p>
+
+      <div class="alert" id="loginAlert"></div>
+
+      <form id="loginForm" novalidate>
+        <div class="field">
+          <label for="loginEmail">E-posta</label>
+          <input type="email" id="loginEmail" autocomplete="email" placeholder="ornek@mail.com">
+          <span class="field-error" id="loginEmailErr"></span>
+        </div>
+        <div class="field">
+          <label for="loginPassword">Şifre</label>
+          <input type="password" id="loginPassword" autocomplete="current-password" placeholder="••••••••">
+          <span class="field-error" id="loginPasswordErr"></span>
+        </div>
+        <button type="submit" class="btn" id="loginBtn">Giriş Yap</button>
+      </form>
+
+      <div class="switch-link">
+        Hesabın yok mu?
+        <button type="button" onclick="showPanel('register')">Kayıt Ol</button>
+      </div>
+    </div>
+
+    <!-- KAYIT PANELİ -->
+    <div class="card panel" id="registerPanel">
+      <p class="card__title">Kayıt Ol</p>
+
+      <div class="alert" id="registerAlert"></div>
+
+      <form id="registerForm" novalidate>
+        <div class="field">
+          <label for="regName">Ad Soyad</label>
+          <input type="text" id="regName" autocomplete="name" placeholder="Adınız Soyadınız">
+          <span class="field-error" id="regNameErr"></span>
+        </div>
+        <div class="field">
+          <label for="regEmail">E-posta</label>
+          <input type="email" id="regEmail" autocomplete="email" placeholder="ornek@mail.com">
+          <span class="field-error" id="regEmailErr"></span>
+        </div>
+        <div class="field">
+          <label for="regPhone">Telefon</label>
+          <input type="tel" id="regPhone" autocomplete="tel" placeholder="05xx xxx xx xx">
+          <span class="field-error" id="regPhoneErr"></span>
+        </div>
+        <div class="field">
+          <label for="regPassword">Şifre (en az 6 karakter)</label>
+          <input type="password" id="regPassword" autocomplete="new-password" placeholder="••••••••">
+          <span class="field-error" id="regPasswordErr"></span>
+        </div>
+
+        <button type="submit" class="btn" id="registerBtn">Kayıt Ol</button>
+      </form>
+
+      <p class="terms-note">Kaydınız admin onayına tabidir. Onay sonrası giriş yapabilirsiniz.</p>
+
+      <div class="switch-link">
+        Zaten hesabın var mı?
+        <button type="button" onclick="showPanel('login')">Giriş Yap</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script type="module">
+    import { loginUser, registerUser } from './js/auth.js';
+
+    window.showPanel = function(name) {
+      document.getElementById('loginPanel').classList.toggle('panel--active', name === 'login');
+      document.getElementById('registerPanel').classList.toggle('panel--active', name === 'register');
+      clearAlerts();
+    };
+
+    function clearAlerts() {
+      ['loginAlert', 'registerAlert'].forEach(id => {
+        const el = document.getElementById(id);
+        el.className = 'alert';
+        el.textContent = '';
+      });
+      ['loginEmailErr', 'loginPasswordErr', 'regNameErr', 'regEmailErr', 'regPhoneErr', 'regPasswordErr'].forEach(id => {
+        document.getElementById(id).textContent = '';
+      });
+      ['loginEmail', 'loginPassword', 'regName', 'regEmail', 'regPhone', 'regPassword'].forEach(id => {
+        document.getElementById(id).classList.remove('input--error');
+      });
+    }
+
+    function showAlert(alertId, message, type) {
+      const el = document.getElementById(alertId);
+      el.textContent = message;
+      el.className = 'alert alert--' + type;
+    }
+
+    function setFieldError(inputId, errId, message) {
+      document.getElementById(inputId).classList.add('input--error');
+      document.getElementById(errId).textContent = message;
+    }
+
+    function setLoading(btnId, loading) {
+      const btn = document.getElementById(btnId);
+      btn.disabled = loading;
+      btn.classList.toggle('btn--loading', loading);
+      btn.textContent = loading ? '' : btn.dataset.label;
+    }
+
+    // Buton etiketlerini data-label'e kaydet
+    document.getElementById('loginBtn').dataset.label = 'Giriş Yap';
+    document.getElementById('registerBtn').dataset.label = 'Kayıt Ol';
+
+    // GİRİŞ FORMU
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearAlerts();
+
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+
+      let valid = true;
+      if (!email) { setFieldError('loginEmail', 'loginEmailErr', 'E-posta gerekli.'); valid = false; }
+      if (!password) { setFieldError('loginPassword', 'loginPasswordErr', 'Şifre gerekli.'); valid = false; }
+      if (!valid) return;
+
+      setLoading('loginBtn', true);
+      const result = await loginUser(email, password);
+      setLoading('loginBtn', false);
+
+      if (result.error) {
+        showAlert('loginAlert', result.error, 'error');
+      } else {
+        window.location.href = 'app.html';
+      }
+    });
+
+    // KAYIT FORMU
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearAlerts();
+
+      const adSoyad = document.getElementById('regName').value.trim();
+      const email = document.getElementById('regEmail').value.trim();
+      const telefon = document.getElementById('regPhone').value.trim();
+      const password = document.getElementById('regPassword').value;
+
+      let valid = true;
+      if (!adSoyad) { setFieldError('regName', 'regNameErr', 'Ad soyad gerekli.'); valid = false; }
+      if (!email) { setFieldError('regEmail', 'regEmailErr', 'E-posta gerekli.'); valid = false; }
+      if (!telefon) { setFieldError('regPhone', 'regPhoneErr', 'Telefon gerekli.'); valid = false; }
+      if (password.length < 6) { setFieldError('regPassword', 'regPasswordErr', 'Şifre en az 6 karakter olmalı.'); valid = false; }
+      if (!valid) return;
+
+      setLoading('registerBtn', true);
+      const result = await registerUser(email, password, adSoyad, telefon);
+      setLoading('registerBtn', false);
+
+      if (result.error) {
+        showAlert('registerAlert', result.error, 'error');
+      } else {
+        showAlert('registerAlert', 'Kaydınız alındı. Admin onayından sonra giriş yapabilirsiniz.', 'success');
+        document.getElementById('registerForm').reset();
+      }
+    });
+  </script>
+
+</body>
+</html>

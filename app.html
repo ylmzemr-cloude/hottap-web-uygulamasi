@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1e40af">
+  <title>ByMEY HotTap Ölçüm Kartı</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/print.css">
+  <link rel="manifest" href="manifest.json">
+</head>
+<body>
+
+  <!-- Supabase yapılandırması -->
+  <script>
+    window.__env = {
+      SUPABASE_URL: 'https://jjbtzgbqgqdjqyzbdgrt.supabase.co',
+      SUPABASE_ANON_KEY: 'sb_publishable_j2dUGqrTsSgD1DzHkhkExw_f-hmWa19'
+    };
+  </script>
+
+  <!-- ─── Header ───────────────────────────────────────────────── -->
+  <header class="app-header">
+    <span class="header-brand">ByMEY HotTap</span>
+    <div id="connectionStatus" class="status-indicator status-indicator--online">● Bağlı</div>
+    <span id="headerUserName" class="header-user-name"></span>
+    <button id="headerLogout" class="header-logout">Çıkış</button>
+  </header>
+
+  <!-- Demo Rozet -->
+  <div id="demoBanner" class="demo-banner hidden">
+    Kalan Demo Hakkınız: <strong id="demoRemaining">5</strong> / 5
+  </div>
+
+  <!-- ─── Navigasyon ────────────────────────────────────────────── -->
+  <nav class="app-nav" id="appNav">
+    <button class="nav-btn nav-btn--active" data-view="new-calc">Yeni Hesaplama</button>
+    <button class="nav-btn" data-view="history">Geçmişim</button>
+    <button class="nav-btn" data-view="message">Yön. Mesaj</button>
+    <!-- Admin sekmeleri — başlangıçta gizli -->
+    <button class="nav-btn hidden admin-only" data-view="admin-pending">
+      Bekleyen <span class="badge" id="pendingBadge">0</span>
+    </button>
+    <button class="nav-btn hidden admin-only" data-view="admin-users">Kullanıcılar</button>
+    <button class="nav-btn hidden admin-only" data-view="admin-calcs">Hesaplamalar</button>
+    <button class="nav-btn hidden admin-only" data-view="admin-tables">Tablolar</button>
+  </nav>
+
+  <!-- ─── Ana İçerik ────────────────────────────────────────────── -->
+  <main class="app-main">
+
+    <!-- ═══ YENİ HESAPLAMA ════════════════════════════════════════ -->
+    <div id="view-new-calc" class="view view--active">
+
+      <!-- Adım İlerleme -->
+      <div class="step-indicator">
+        <div class="step-dot active" id="dot1"></div>
+        <div class="step-dot" id="dot2"></div>
+        <div class="step-dot" id="dot3"></div>
+      </div>
+
+      <!-- ─── Adım 1: Proje Bilgileri ──────────────────────────── -->
+      <div id="step-project">
+        <div class="card">
+          <p class="card__title">Yeni Hesaplama</p>
+
+          <div class="field">
+            <label for="projeNo">Proje No</label>
+            <input type="text" id="projeNo" class="input-field" placeholder="PRJ-001">
+            <span class="field-error" id="projeNoErr" role="alert"></span>
+          </div>
+
+          <div class="field">
+            <label for="operasyonTarihi">Operasyon Tarihi</label>
+            <input type="date" id="operasyonTarihi" class="input-field">
+            <span class="field-error" id="tarihErr" role="alert"></span>
+          </div>
+        </div>
+
+        <div class="card">
+          <p class="card__title">Operasyon Sayıları</p>
+
+          <div class="op-counter">
+            <span class="op-counter__label">HotTap</span>
+            <button class="counter-btn" data-op="hottap" data-action="dec">−</button>
+            <span class="counter-value" id="count-hottap">0</span>
+            <button class="counter-btn" data-op="hottap" data-action="inc">+</button>
+          </div>
+
+          <div class="op-counter">
+            <span class="op-counter__label">Stopple</span>
+            <button class="counter-btn" data-op="stopple" data-action="dec">−</button>
+            <span class="counter-value" id="count-stopple">0</span>
+            <button class="counter-btn" data-op="stopple" data-action="inc">+</button>
+          </div>
+
+          <div class="op-counter">
+            <span class="op-counter__label">Tapalama</span>
+            <button class="counter-btn" data-op="tapalama" data-action="dec">−</button>
+            <span class="counter-value" id="count-tapalama">0</span>
+            <button class="counter-btn" data-op="tapalama" data-action="inc">+</button>
+          </div>
+        </div>
+
+        <div id="stepProjectAlert" class="alert alert--error hidden"></div>
+        <button id="btnStep1Next" class="btn btn--primary">İleri →</button>
+      </div>
+
+      <!-- ─── Adım 2: Veri Girişi ───────────────────────────────── -->
+      <div id="step-data" class="hidden">
+        <div id="operationCards">
+          <!-- Dinamik olarak oluşturulan operasyon kartları -->
+        </div>
+        <div class="card" style="display:flex;gap:10px;">
+          <button id="btnStep2Back" class="btn btn--secondary">← Geri</button>
+          <button id="btnStep2Next" class="btn btn--primary">Hesapla →</button>
+        </div>
+      </div>
+
+      <!-- ─── Adım 3: Sonuçlar ───────────────────────────────────── -->
+      <div id="step-results" class="hidden">
+        <div id="resultTabs" class="tabs">
+          <!-- Dinamik sekmeler -->
+        </div>
+        <div id="resultContent">
+          <!-- Aktif sekme içeriği -->
+        </div>
+        <div class="card" style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button id="btnStep3Back" class="btn btn--secondary btn--sm">← Geri</button>
+          <button id="btnSaveCalc" class="btn btn--success" disabled>Kaydet ve PDF İndir</button>
+        </div>
+      </div>
+
+    </div><!-- /view-new-calc -->
+
+    <!-- ═══ GEÇMİŞ ════════════════════════════════════════════════ -->
+    <div id="view-history" class="view">
+      <div class="card">
+        <p class="card__title">Geçmişim</p>
+        <div id="historyList">
+          <div class="empty-state">
+            <div class="empty-state__icon">📋</div>
+            <div class="empty-state__text">Henüz hesaplama kaydedilmedi.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ YÖNETİCİYE MESAJ ══════════════════════════════════════ -->
+    <div id="view-message" class="view">
+      <div class="card">
+        <p class="card__title">Yöneticiye Mesaj</p>
+        <div id="messageAlert" class="alert hidden"></div>
+        <div class="field">
+          <label for="messageText">Mesajınız</label>
+          <textarea id="messageText" class="input-field" rows="5"
+            placeholder="Sorunuz veya talebinizi buraya yazınız..."
+            style="resize:vertical;"></textarea>
+          <span class="field-error" id="messageErr" role="alert"></span>
+        </div>
+        <button id="btnSendMessage" class="btn btn--primary">Gönder</button>
+      </div>
+    </div>
+
+    <!-- ═══ ADMİN — BEKLEYENLEr ════════════════════════════════════ -->
+    <div id="view-admin-pending" class="view">
+      <div class="card">
+        <p class="card__title">Bekleyen Başvurular</p>
+        <div id="pendingList">
+          <div class="empty-state">
+            <div class="empty-state__icon">✅</div>
+            <div class="empty-state__text">Bekleyen başvuru yok.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ ADMİN — KULLANICILAR ════════════════════════════════════ -->
+    <div id="view-admin-users" class="view">
+      <div class="card">
+        <p class="card__title">Kullanıcılar</p>
+        <div id="usersList"></div>
+      </div>
+    </div>
+
+    <!-- ═══ ADMİN — HESAPLAMALAR ════════════════════════════════════ -->
+    <div id="view-admin-calcs" class="view">
+      <div class="card">
+        <p class="card__title">Tüm Hesaplamalar</p>
+        <div id="calcsList"></div>
+      </div>
+    </div>
+
+    <!-- ═══ ADMİN — TABLOLAR ════════════════════════════════════════ -->
+    <div id="view-admin-tables" class="view">
+      <div class="card">
+        <p class="card__title">Tablo Verileri</p>
+        <p style="font-size:13px;color:#64748b;margin-bottom:16px;">
+          Boru, cutter ve yay tablolarını buradan düzenleyebilirsiniz.
+        </p>
+        <div id="tablesContent"></div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ─── Yardım Popup ──────────────────────────────────────────── -->
+  <div class="popup-overlay hidden" id="popupOverlay"></div>
+  <div class="help-popup hidden" id="helpPopup" role="dialog" aria-modal="true" aria-labelledby="helpPopupTitle">
+    <div class="help-popup__header">
+      <h3 id="helpPopupTitle">Yardım</h3>
+      <button class="help-popup__close" id="helpPopupClose" aria-label="Kapat">×</button>
+    </div>
+    <div class="help-popup__img" id="helpPopupImgWrap">
+      <div class="help-img-placeholder">Görsel yükleniyor...</div>
+    </div>
+    <div class="help-popup__text" id="helpPopupText"></div>
+    <div class="help-popup__meta" id="helpPopupMeta"></div>
+  </div>
+
+  <!-- ─── Toast Konteyneri ─────────────────────────────────────── -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- ─── html2pdf.js (PDF üretimi için) ───────────���─────────── -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+  <!-- ─── Service Worker ──────────────────────────────────────── -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/service-worker.js').catch(() => {});
+    }
+  </script>
+
+  <!-- ─── JavaScript ───────────────────────────────────────────── -->
+  <script type="module" src="js/ui.js"></script>
+
+</body>
+</html>

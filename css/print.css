@@ -1,0 +1,70 @@
+@media print {
+  /* Header, navigasyon, butonlar gizlenir */
+  .app-header,
+  .app-nav,
+  .demo-banner,
+  .btn,
+  .tabs,
+  .help-btn,
+  .image-uploader,
+  .step-indicator,
+  .toast-container,
+  .help-popup,
+  .popup-overlay { display: none !important; }
+
+  body {
+    background: #fff;
+    font-size: 11pt;
+    color: #000;
+  }
+
+  .app-main { padding: 0; max-width: 100%; }
+  .view.view--active { display: block; }
+
+  /* PDF başlık */
+  .pdf-header {
+    text-align: center;
+    padding-bottom: 16px;
+    margin-bottom: 16px;
+    border-bottom: 2px solid #000;
+  }
+
+  .pdf-header h1 { font-size: 18pt; font-weight: 700; margin-bottom: 4px; }
+  .pdf-header p  { font-size: 10pt; color: #444; }
+
+  /* Kart */
+  .card {
+    box-shadow: none;
+    border: 1px solid #ccc;
+    page-break-inside: avoid;
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+
+  .card__title { font-size: 13pt; font-weight: 700; }
+
+  /* Sonuç blokları */
+  .result-block {
+    background: #f5f5f5;
+    border: 1px solid #ccc;
+    page-break-inside: avoid;
+  }
+
+  .result-block__value { font-size: 16pt; }
+
+  /* Adım listesi */
+  .steps-list { font-size: 9pt; }
+
+  /* Veri özeti */
+  .data-summary { font-size: 10pt; }
+
+  /* Her sayfa için tekrar edilecek başlık (tarayıcı desteği gerekir) */
+  @page {
+    margin: 15mm 12mm;
+    size: A4 portrait;
+  }
+
+  @page :first {
+    margin-top: 12mm;
+  }
+}
