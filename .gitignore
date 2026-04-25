@@ -1,0 +1,26 @@
+# Ortam değişkenleri — asla commit'lenme
+.env
+.env.local
+.env.*.local
+
+# Bağımlılıklar
+node_modules/
+
+# Derleme çıktıları
+dist/
+build/
+
+# OS dosyaları
+.DS_Store
+Thumbs.db
+
+# Log dosyaları
+*.log
+npm-debug.log*
+
+# Editor
+.vscode/
+.idea/
+
+# Supabase yerel geliştirme
+.supabase/
