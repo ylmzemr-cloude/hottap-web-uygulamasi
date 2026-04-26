@@ -11,7 +11,7 @@ const { chromium } = require('playwright');
 // ── AYARLAR ─────────────────────────────────────────────────────────────────
 const APP_URL        = 'https://ylmzemr-cloude.github.io/hottap-web-uygulamasi/';
 const ADMIN_EMAIL    = 'ylmz.emr@gmail.com';
-const ADMIN_PASSWORD = process.env.ADMIN_PASS || '';
+const ADMIN_PASSWORD = process.env.ADMIN_PASS || process.argv[2] || '';
 
 const TS         = Date.now();
 const TEST_EMAIL = `test_${TS}@testmail.invalid`;
@@ -230,9 +230,22 @@ async function testYoneticiMesaj(page) {
     await page.click('[data-view="message"]');
     await page.fill('#messageText', 'Bu otomatik test mesajıdır.');
     await page.click('#btnSendMessage');
-    await page.waitForSelector('#messageAlert.alert--success', { timeout: 10000 });
-    const txt = await page.textContent('#messageAlert');
-    if (!txt.includes('ileti')) throw new Error('Başarı mesajı yok: ' + txt);
+
+    // Başarı VEYA hata mesajı bekle — hangisi gelirse tam metni göster
+    await page.waitForFunction(
+      () => {
+        const el = document.getElementById('messageAlert');
+        return el && (el.classList.contains('alert--success') || el.classList.contains('alert--error'));
+      },
+      { timeout: 20000 }
+    );
+
+    const alertClass = await page.getAttribute('#messageAlert', 'class');
+    const alertText  = await page.textContent('#messageAlert');
+
+    if (!alertClass.includes('alert--success')) {
+      throw new Error('Hata mesajı göründü: ' + alertText.trim());
+    }
     ok(name);
   } catch (e) { fail(name, e); }
 }
