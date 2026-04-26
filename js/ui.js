@@ -1186,12 +1186,11 @@ function loadAdminTables() {
       <button class="btn btn--ghost btn--sm" id="btnExportPipe">⬇ CSV</button>
     </div>
     <div style="overflow-x:auto;"><table class="admin-table">
-      <thead><tr><th>OD (inç)</th><th>OD (mm)</th><th>Et (inç)</th><th>Et (mm)</th><th>ID (inç)</th><th>ID (mm)</th><th>Ağırlık (kg/m)</th></tr></thead>
+      <thead><tr><th>OD (inç)</th><th>OD (mm)</th><th>Et (mm)</th><th>ID (mm)</th></tr></thead>
       <tbody>${pipeData.map(r => `<tr>
         <td>${r.pipe_od_inch}"</td><td>${r.pipe_od_mm}</td>
-        <td>${r.pipe_wall_inch}"</td><td>${r.pipe_wall_mm}</td>
-        <td>${r.pipe_id_inch}"</td><td>${r.pipe_id_mm}</td>
-        <td>${r.weight_kg_m ?? '—'}</td>
+        <td>${r.pipe_wall_mm}</td>
+        <td>${r.pipe_id_mm}</td>
       </tr>`).join('')}</tbody>
     </table></div>
   </div>
@@ -1202,9 +1201,9 @@ function loadAdminTables() {
       <button class="btn btn--ghost btn--sm" id="btnExportCutter">⬇ CSV</button>
     </div>
     <div style="overflow-x:auto;"><table class="admin-table">
-      <thead><tr><th>Nominal (inç)</th><th>Gerçek (inç)</th><th>Gerçek (mm)</th></tr></thead>
+      <thead><tr><th>Nominal (inç)</th><th>Gerçek (mm)</th></tr></thead>
       <tbody>${cutterData.map(r => `<tr>
-        <td>${r.cutter_nominal_inch}"</td><td>${r.cutter_actual_inch}"</td><td>${r.cutter_actual_mm}</td>
+        <td>${r.cutter_nominal_inch}"</td><td>${r.cutter_actual_mm}</td>
       </tr>`).join('')}</tbody>
     </table></div>
   </div>
@@ -1224,13 +1223,13 @@ function loadAdminTables() {
 
   document.getElementById('btnExportPipe')?.addEventListener('click', () =>
     csvDownload('pipe_data.csv',
-      ['OD_inch','OD_mm','wall_inch','wall_mm','ID_inch','ID_mm','weight_kg_m'],
-      pipeData.map(r => [r.pipe_od_inch,r.pipe_od_mm,r.pipe_wall_inch,r.pipe_wall_mm,r.pipe_id_inch,r.pipe_id_mm,r.weight_kg_m ?? ''])));
+      ['OD_inch','OD_mm','wall_mm','ID_mm'],
+      pipeData.map(r => [r.pipe_od_inch,r.pipe_od_mm,r.pipe_wall_mm,r.pipe_id_mm])));
 
   document.getElementById('btnExportCutter')?.addEventListener('click', () =>
     csvDownload('cutter_data.csv',
-      ['nominal_inch','actual_inch','actual_mm'],
-      cutterData.map(r => [r.cutter_nominal_inch,r.cutter_actual_inch,r.cutter_actual_mm])));
+      ['nominal_inch','actual_mm'],
+      cutterData.map(r => [r.cutter_nominal_inch,r.cutter_actual_mm])));
 
   document.getElementById('btnExportSpring')?.addEventListener('click', () =>
     csvDownload('spring_data.csv',

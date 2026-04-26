@@ -34,20 +34,16 @@ CREATE TABLE IF NOT EXISTS public.calculations (
 );
 
 CREATE TABLE IF NOT EXISTS public.pipe_data (
-  id              serial PRIMARY KEY,
-  pipe_od_inch    decimal NOT NULL,
-  pipe_od_mm      decimal NOT NULL,
-  pipe_wall_inch  decimal NOT NULL,
-  pipe_wall_mm    decimal NOT NULL,
-  pipe_id_inch    decimal NOT NULL,
-  pipe_id_mm      decimal NOT NULL,
-  weight_kg_m     decimal
+  id           serial PRIMARY KEY,
+  pipe_od_inch decimal NOT NULL,
+  pipe_od_mm   decimal NOT NULL,
+  pipe_wall_mm decimal NOT NULL,
+  pipe_id_mm   decimal NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS public.cutter_data (
   id                  serial PRIMARY KEY,
   cutter_nominal_inch decimal NOT NULL,
-  cutter_actual_inch  decimal NOT NULL,
   cutter_actual_mm    decimal NOT NULL
 );
 
@@ -162,41 +158,41 @@ CREATE POLICY "admin_write_spring_data"
 -- ============================================================
 
 INSERT INTO public.pipe_data
-  (pipe_od_inch, pipe_od_mm, pipe_wall_inch, pipe_wall_mm, pipe_id_inch, pipe_id_mm, weight_kg_m)
+  (pipe_od_inch, pipe_od_mm, pipe_wall_mm, pipe_id_mm)
 VALUES
-  (4,  114.3, 0.172, 4.37, 4.156,  105.56, 11.84),
-  (6,  168.3, 0.172, 4.37, 6.282,  159.56, 17.50),
-  (8,  219.1, 0.188, 4.78, 8.250,  209.54, 25.23),
-  (12, 323.8, 0.219, 5.56, 12.310, 312.68, 43.66),
-  (16, 406.4, 0.250, 6.35, 15.500, 393.70, 62.63),
-  (20, 508.0, 0.281, 7.14, 19.438, 493.72, 97.71),
-  (24, 609.6, 0.312, 7.92, 23.376, 593.76, 117.57),
-  (28, 711.2, 0.375, 9.52, 27.250, 692.16, 164.80)
+  (4,  114.3, 4.37, 105.56),
+  (6,  168.3, 4.37, 159.56),
+  (8,  219.1, 4.78, 209.54),
+  (12, 323.8, 5.56, 312.68),
+  (16, 406.4, 6.35, 393.70),
+  (20, 508.0, 7.14, 493.72),
+  (24, 609.6, 7.92, 593.76),
+  (28, 711.2, 9.52, 692.16)
 ON CONFLICT DO NOTHING;
 
 INSERT INTO public.cutter_data
-  (cutter_nominal_inch, cutter_actual_inch, cutter_actual_mm)
+  (cutter_nominal_inch, cutter_actual_mm)
 VALUES
-  (4,  3.875,  98),
-  (6,  5.875,  149),
-  (8,  7.750,  197),
-  (10, 9.750,  248),
-  (12, 11.750, 299),
-  (14, 13.0625, 332),
-  (16, 15.0625, 383),
-  (18, 17.000, 432),
-  (20, 19.000, 483),
-  (22, 21.000, 533),
-  (24, 23.000, 584),
-  (26, 25.000, 635),
-  (28, 27.000, 686),
-  (30, 29.000, 737),
-  (32, 31.000, 787),
-  (34, 33.000, 838),
-  (36, 35.000, 889),
-  (38, 36.875, 937),
-  (40, 38.875, 987),
-  (42, 40.875, 1038)
+  (4,  98),
+  (6,  149),
+  (8,  197),
+  (10, 248),
+  (12, 299),
+  (14, 332),
+  (16, 383),
+  (18, 432),
+  (20, 483),
+  (22, 533),
+  (24, 584),
+  (26, 635),
+  (28, 686),
+  (30, 737),
+  (32, 787),
+  (34, 838),
+  (36, 889),
+  (38, 937),
+  (40, 987),
+  (42, 1038)
 ON CONFLICT DO NOTHING;
 
 INSERT INTO public.spring_data
