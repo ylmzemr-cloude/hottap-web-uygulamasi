@@ -1,114 +1,128 @@
 {
+  "ProjeNo": {
+    "title": "Proje No — İş Emri Numarası",
+    "text": "Operasyona ait iş emri veya proje numarası. Kayıt ve PDF'te görünür, arama yaparken bu numaraya göre filtreleme yapılabilir.",
+    "unit": "",
+    "note": "Zorunlu alan. Örnek: PRJ-001, IE-2024-042",
+    "image": "proje_no.png"
+  },
+  "OperasyonTarihi": {
+    "title": "Operasyon Tarihi",
+    "text": "HotTap veya Stopple operasyonunun sahada gerçekleştirildiği tarih.",
+    "unit": "",
+    "note": "Zorunlu alan. Gün/Ay/Yıl formatında girilir.",
+    "image": "operasyon_tarihi.png"
+  },
   "PipeOD": {
     "title": "Pipe OD — Boru Dış Çapı",
     "text": "Operasyon yapılacak borunun nominal (katalog) dış çapı. Tablodan seçilir; seçim yapıldığında Pipe ID ve et kalınlığı otomatik dolar.",
     "unit": "inç (nominal)",
     "note": "Sadece tabloda kayıtlı çaplar seçilebilir.",
-    "image": "pipe_OD.png"
+    "image": "pipe_od.png"
   },
   "CutterOD": {
     "title": "Cutter OD — Cutter Nominal Çapı",
     "text": "Delme işleminde kullanılan cutter'ın nominal çapı. Tablodan seçilir; seçimden sonra gerçek (actual) cutter çapı otomatik dolar. Cutter OD, Pipe OD'yi geçemez.",
     "unit": "inç (nominal)",
     "note": "Stopple operasyonunda Cutter OD = Pipe OD zorunludur.",
-    "image": "cutter_OD.png"
+    "image": "cutter_od.png"
   },
   "CutterWall": {
     "title": "Cutter Et Kalınlığı",
     "text": "Cutter gövdesinin et (duvar) kalınlığı. Bu değer SADECE mm cinsinden girilir.",
     "unit": "mm (sabit)",
     "note": "İnç seçeneği yoktur — her zaman mm giriniz.",
-    "image": "cutter_wall.png"
+    "image": "cutter_et.png"
   },
   "A": {
     "title": "A — Pilot Ucundan Adaptör Yüzeyine",
     "text": "Pilot drill ucundan tapping machine adaptörünün yüzeyine kadar olan mesafe.",
     "unit": "mm veya inç",
     "note": "Pozitif değer girilir.",
-    "image": "A.png"
+    "image": "olcu_A.png"
   },
   "B": {
     "title": "B — Adaptör Yüzeyinden Vana Alt Yüzeyine",
     "text": "Tapping machine adaptörünün yüzeyinden boru üzerindeki vanın alt yüzeyine kadar olan mesafe.",
     "unit": "mm veya inç",
     "note": "Pozitif değer girilir.",
-    "image": "B.png"
+    "image": "olcu_B.png"
   },
   "Ref1": {
     "title": "Ref1 — Pilot Ucundan Cutter Kesme Yüzeyine",
     "text": "Pilot drill ucundan cutter kesme yüzeyine kadar olan referans mesafe. Makine tipine göre negatif olabilir.",
     "unit": "mm veya inç",
     "note": "Negatif değer alabilir — eksi işaretiyle giriniz.",
-    "image": "Ref1.png"
+    "image": "olcu_Ref1.png"
   },
   "D": {
     "title": "D — Stopple Referans Ölçüsü",
     "text": "Stopple operasyonunda tapping machine adaptörünün yüzeyinden stopple mekanizmasına kadar olan referans mesafe.",
     "unit": "mm veya inç",
     "note": "Pozitif değer girilir.",
-    "image": "D.png"
+    "image": "olcu_D.png"
   },
   "Ref2": {
     "title": "Ref2 — Stopple Teker Referansı",
     "text": "Teker (wheel) konumu için kullanılan referans ölçüsü. Makine tipine göre negatif olabilir.",
     "unit": "mm veya inç",
     "note": "Negatif değer alabilir — eksi işaretiyle giriniz.",
-    "image": "Ref2.png"
+    "image": "olcu_Ref2.png"
   },
   "G": {
     "title": "G — Tapalama Referans Ölçüsü 1",
     "text": "Tamamlama (tapalama) operasyonunda ilk referans mesafe.",
     "unit": "mm veya inç",
     "note": "Pozitif değer girilir.",
-    "image": "G.png"
+    "image": "olcu_G.png"
   },
   "H": {
     "title": "H — Tapalama Referans Ölçüsü 2",
     "text": "Tamamlama (tapalama) operasyonunda ikinci referans mesafe.",
     "unit": "mm veya inç",
     "note": "Pozitif değer girilir.",
-    "image": "H.png"
+    "image": "olcu_H.png"
   },
   "Y": {
     "title": "Y — Yay Baskısı (Spring Travel)",
-    "text": "Cutter mekanizmasındaki yayın serbest seyahat mesafesi. 12\" ve altı cutter için tablodan otomatik gelir.",
+    "text": "Cutter mekanizmasındaki yayın serbest seyahat mesafesi. 12 inç ve altı cutter için tablodan otomatik gelir.",
     "unit": "mm (tablodan otomatik)",
-    "note": "12\" üzeri cutter için bu değer yoktur; bunun yerine F girilir.",
-    "image": "Y.png"
+    "note": "12 inç üzeri cutter için bu değer yoktur; bunun yerine F girilir.",
+    "image": "olcu_Y.png"
   },
   "F": {
-    "title": "F — Tapalama Ek Ölçüsü (>12\")",
+    "title": "F — Tapalama Ek Ölçüsü (12 inç üzeri)",
     "text": "12 inç üzeri cutter boyutlarında yay baskısı yerine kullanılan ek ölçü. Kullanıcı tarafından girilir.",
     "unit": "mm veya inç",
-    "note": "Sadece 12\" üzeri cutter için görünür.",
-    "image": "F.png"
+    "note": "Sadece 12 inç üzeri cutter için görünür.",
+    "image": "olcu_F.png"
   },
   "KKM": {
     "title": "KKM — Kalan Kesim Mesafesi",
     "text": "Delme sırasında anlık olarak ölçülen kalan kesim mesafesi. Bu alan SADECE inç cinsinden girilir.",
     "unit": "inç (sabit)",
     "note": "Delme süresi hesabı opsiyoneldir.",
-    "image": "KKM.png"
+    "image": "olcu_KKM.png"
   },
   "TS": {
     "title": "TS — Tur Sayısı",
     "text": "Delme makinasının şu anki konumundaki sayım (tur adedi). KKM ile birlikte kalan tur sayısını hesaplamak için kullanılır.",
     "unit": "tur (adet)",
     "note": "Delme süresi hesabı opsiyoneldir.",
-    "image": "TS.png"
+    "image": "olcu_TS.png"
   },
   "M": {
     "title": "M — Vana Üstünden Tapa Tutucu Alt Yüzüne",
     "text": "Geri alma operasyonunda vanın üst yüzeyinden tapa tutucunun alt yüzeyine (tam geri çekilmiş konumda) olan mesafe.",
     "unit": "mm veya inç",
     "note": "Geri alma hesabı opsiyoneldir.",
-    "image": "M.png"
+    "image": "olcu_M.png"
   },
   "N": {
     "title": "N — Vana Üstünden Tamamlama Tapası Yuvasına",
     "text": "Geri alma operasyonunda vanın üst yüzeyinden tamamlama tapasının yuvasının alt yüzeyine olan mesafe.",
     "unit": "mm veya inç",
     "note": "Geri alma hesabı opsiyoneldir.",
-    "image": "N.png"
+    "image": "olcu_N.png"
   }
 }
