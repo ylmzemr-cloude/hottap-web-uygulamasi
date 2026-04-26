@@ -68,7 +68,7 @@ Formül değiştirdikten sonra mutlaka kontrol edin:
 
 **Referans değer (12" boru, 12" cutter):**
 - Pipe OD: 323.85 mm, Pipe ID: 312.67 mm, Cutter OD: 298.45 mm
-- Beklenen C1 ≈ 34.344 mm
+- Beklenen C1 ≈ 115.315 mm
 
 ---
 

@@ -39,6 +39,7 @@ Deno.serve(async (req) => {
   const mesaj = body.mesaj;
 
   try {
+    console.log("send-email called, tip:", tip, "RESEND_API_KEY set:", !!RESEND_API_KEY);
     if (tip === "yeni_kayit") {
       const tarih = kullanici && kullanici.kayit_zamani ? formatTarih(kullanici.kayit_zamani) : "-";
       const html = "<h2>Yeni Kullanici Kaydi</h2>"
@@ -47,7 +48,7 @@ Deno.serve(async (req) => {
         + "<p><b>Telefon:</b> " + (kullanici.telefon || "-") + "</p>"
         + "<p><b>Kayit:</b> " + tarih + "</p>"
         + "<p><b>Tarayici:</b> " + (kullanici.tarayici || "-") + "</p>"
-        + "<p>Onaylamak icin admin paneline giris yapin.</p>";
+        + "<p><a href='https://ylmzemr-cloude.github.io/hottap-web-uygulamasi/app.html' style='background:#2563eb;color:#fff;padding:10px 20px;text-decoration:none;border-radius:6px;display:inline-block;margin-top:8px;'>Admin Paneline Git</a></p>";
       await sendEmail(ADMIN_EMAIL, "Yeni kullanici kaydi: " + kullanici.ad_soyad, html);
 
     } else if (tip === "yeni_hesaplama") {
@@ -78,12 +79,13 @@ Deno.serve(async (req) => {
 
     return new Response(
       JSON.stringify({ ok: true }),
-      { headers: { "Content-Type": "application/json" } }
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
+    console.error("send-email error:", err.message);
     return new Response(
       JSON.stringify({ error: err.message }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });

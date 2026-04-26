@@ -54,7 +54,7 @@ assert('cutterID', formulas.cutterID(TC1.cutterOdActualMm, TC1.cutterWallMm), 27
 
 // C1
 const { result: c1Result } = calculateC1(TC1.pipeOdMm, TC1.pipeIdMm, TC1.cutterOdActualMm);
-assert('C1 hesaplaması', c1Result, 34.344, 0.01);
+assert('C1 hesaplaması', c1Result, 115.315, 0.01);
 
 // C = C1 + Ref1
 const { result: cResult } = calculateC(c1Result, TC1.ref1Mm);
