@@ -1,0 +1,19 @@
+No,Alan,Ekranda Görünen,Başlık,Açıklama,Birim,Not,Dahili Fotoğraf Adı
+1,ProjeNo,Proje No,Proje No — İş Emri Numarası,"Operasyona ait iş emri veya proje numarası. Kayıt ve PDF'te görünür, arama yaparken bu numaraya göre filtreleme yapılabilir.",,Zorunlu alan. Örnek: PRJ-001 IE-2024-042,proje_no.png
+2,OperasyonTarihi,Operasyon Tarihi,Operasyon Tarihi,HotTap veya Stopple operasyonunun sahada gerçekleştirildiği tarih.,,Zorunlu alan. Gün/Ay/Yıl formatında girilir.,operasyon_tarihi.png
+3,PipeOD,Pipe OD,Pipe OD — Boru Dış Çapı,"Operasyon yapılacak borunun nominal (katalog) dış çapı. Tablodan seçilir; seçim yapıldığında Pipe ID ve et kalınlığı otomatik dolar.",inç (nominal),Sadece tabloda kayıtlı çaplar seçilebilir.,pipe_od.png
+4,CutterOD,Cutter OD,Cutter OD — Cutter Nominal Çapı,"Delme işleminde kullanılan cutter'ın nominal çapı. Tablodan seçilir; seçimden sonra gerçek (actual) cutter çapı otomatik dolar. Cutter OD, Pipe OD'yi geçemez.",inç (nominal),Stopple operasyonunda Cutter OD = Pipe OD zorunludur.,cutter_od.png
+5,CutterWall,Cutter Et Kalınlığı,Cutter Et Kalınlığı,Cutter gövdesinin et (duvar) kalınlığı. Bu değer SADECE mm cinsinden girilir.,mm (sabit),İnç seçeneği yoktur — her zaman mm giriniz.,cutter_et.png
+6,A,A,A — Pilot Ucundan Adaptör Yüzeyine,Pilot drill ucundan tapping machine adaptörünün yüzeyine kadar olan mesafe.,mm veya inç,Pozitif değer girilir.,olcu_A.png
+7,B,B,B — Adaptör Yüzeyinden Vana Alt Yüzeyine,Tapping machine adaptörünün yüzeyinden boru üzerindeki vanın alt yüzeyine kadar olan mesafe.,mm veya inç,Pozitif değer girilir.,olcu_B.png
+8,Ref1,Ref1,Ref1 — Pilot Ucundan Cutter Kesme Yüzeyine,"Pilot drill ucundan cutter kesme yüzeyine kadar olan referans mesafe. Makine tipine göre negatif olabilir.",mm veya inç,Negatif değer alabilir — eksi işaretiyle giriniz.,olcu_Ref1.png
+9,D,D,D — Stopple Referans Ölçüsü,Stopple operasyonunda tapping machine adaptörünün yüzeyinden stopple mekanizmasına kadar olan referans mesafe.,mm veya inç,Pozitif değer girilir.,olcu_D.png
+10,Ref2,Ref2,Ref2 — Stopple Teker Referansı,"Teker (wheel) konumu için kullanılan referans ölçüsü. Makine tipine göre negatif olabilir.",mm veya inç,Negatif değer alabilir — eksi işaretiyle giriniz.,olcu_Ref2.png
+11,G,G,G — Tapalama Referans Ölçüsü 1,Tamamlama (tapalama) operasyonunda ilk referans mesafe.,mm veya inç,Pozitif değer girilir.,olcu_G.png
+12,H,H,H — Tapalama Referans Ölçüsü 2,Tamamlama (tapalama) operasyonunda ikinci referans mesafe.,mm veya inç,Pozitif değer girilir.,olcu_H.png
+13,Y,Y,Y — Yay Baskısı (Spring Travel),"Cutter mekanizmasındaki yayın serbest seyahat mesafesi. 12 inç ve altı cutter için tablodan otomatik gelir.",mm (tablodan otomatik),12 inç üzeri cutter için bu değer yoktur; bunun yerine F girilir.,olcu_Y.png
+14,F,F,F — Tapalama Ek Ölçüsü (12 inç üzeri),12 inç üzeri cutter boyutlarında yay baskısı yerine kullanılan ek ölçü. Kullanıcı tarafından girilir.,mm veya inç,Sadece 12 inç üzeri cutter için görünür.,olcu_F.png
+15,KKM,KKM,KKM — Kalan Kesim Mesafesi,Delme sırasında anlık olarak ölçülen kalan kesim mesafesi. Bu alan SADECE inç cinsinden girilir.,inç (sabit),Delme süresi hesabı opsiyoneldir.,olcu_KKM.png
+16,TS,TS,TS — Tur Sayısı,"Delme makinasının şu anki konumundaki sayım (tur adedi). KKM ile birlikte kalan tur sayısını hesaplamak için kullanılır.",tur (adet),Delme süresi hesabı opsiyoneldir.,olcu_TS.png
+17,M,M,M — Vana Üstünden Tapa Tutucu Alt Yüzüne,"Geri alma operasyonunda vanın üst yüzeyinden tapa tutucunun alt yüzeyine (tam geri çekilmiş konumda) olan mesafe.",mm veya inç,Geri alma hesabı opsiyoneldir.,olcu_M.png
+18,N,N,N — Vana Üstünden Tamamlama Tapası Yuvasına,Geri alma operasyonunda vanın üst yüzeyinden tamamlama tapasının yuvasının alt yüzeyine olan mesafe.,mm veya inç,Geri alma hesabı opsiyoneldir.,olcu_N.png
