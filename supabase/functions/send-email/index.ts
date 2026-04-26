@@ -1,0 +1,89 @@
+// @ts-nocheck
+import "jsr:@supabase/functions-js/edge-runtime.d.ts"
+
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+const ADMIN_EMAIL = Deno.env.get("ADMIN_EMAIL") ?? "ylmz.emr@gmail.com";
+const FROM_EMAIL = "onboarding@resend.dev";
+
+async function sendEmail(to, subject, html) {
+  if (!RESEND_API_KEY) throw new Error("RESEND_API_KEY tanimlanmamis.");
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: "Bearer " + RESEND_API_KEY,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ from: FROM_EMAIL, to: to, subject: subject, html: html }),
+  });
+  if (!res.ok) throw new Error("Resend hatasi: " + (await res.text()));
+}
+
+function formatTarih(iso) {
+  return new Date(iso).toLocaleString("tr-TR", { timeZone: "Europe/Istanbul" });
+}
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  const body = await req.json();
+  const tip = body.tip;
+  const kullanici = body.kullanici;
+  const hesaplama = body.hesaplama;
+  const mesaj = body.mesaj;
+
+  try {
+    if (tip === "yeni_kayit") {
+      const tarih = kullanici && kullanici.kayit_zamani ? formatTarih(kullanici.kayit_zamani) : "-";
+      const html = "<h2>Yeni Kullanici Kaydi</h2>"
+        + "<p><b>Ad Soyad:</b> " + (kullanici.ad_soyad || "-") + "</p>"
+        + "<p><b>Email:</b> " + (kullanici.email || "-") + "</p>"
+        + "<p><b>Telefon:</b> " + (kullanici.telefon || "-") + "</p>"
+        + "<p><b>Kayit:</b> " + tarih + "</p>"
+        + "<p><b>Tarayici:</b> " + (kullanici.tarayici || "-") + "</p>"
+        + "<p>Onaylamak icin admin paneline giris yapin.</p>";
+      await sendEmail(ADMIN_EMAIL, "Yeni kullanici kaydi: " + kullanici.ad_soyad, html);
+
+    } else if (tip === "yeni_hesaplama") {
+      const html = "<h2>Yeni Hesaplama</h2>"
+        + "<p><b>Proje No:</b> " + (hesaplama.proje_no || "-") + "</p>"
+        + "<p><b>Kullanici:</b> " + (hesaplama.kullanici_adi || "-") + "</p>"
+        + "<p><b>Tarih:</b> " + (hesaplama.operasyon_tarihi || "-") + "</p>";
+      await sendEmail(ADMIN_EMAIL, "Yeni hesaplama: " + hesaplama.proje_no + " - " + hesaplama.kullanici_adi, html);
+
+    } else if (tip === "onay_bildirimi") {
+      const html = "<h2>Hesabiniz Onaylandi</h2>"
+        + "<p>Sayin " + kullanici.ad_soyad + ", hesabiniz aktif. Giris yapabilirsiniz.</p>"
+        + "<p>Iletisim: " + ADMIN_EMAIL + "</p>";
+      await sendEmail(kullanici.email, "ByMEY HotTap - Hesabiniz onaylandi", html);
+
+    } else if (tip === "red_bildirimi") {
+      const html = "<h2>Hesap Basvurusu</h2>"
+        + "<p>Sayin " + kullanici.ad_soyad + ", basvurunuz uygun bulunamamistir.</p>"
+        + "<p>Bilgi icin: " + ADMIN_EMAIL + "</p>";
+      await sendEmail(kullanici.email, "ByMEY HotTap - Hesap basvurusu", html);
+
+    } else if (tip === "yonetici_mesaj") {
+      const html = "<h2>Kullanici Mesaji</h2>"
+        + "<p><b>Gonderen:</b> " + kullanici.ad_soyad + " (" + kullanici.email + ")</p>"
+        + "<p>" + (mesaj || "") + "</p>";
+      await sendEmail(ADMIN_EMAIL, kullanici.ad_soyad + " - Uygulama Mesaji", html);
+    }
+
+    return new Response(
+      JSON.stringify({ ok: true }),
+      { headers: { "Content-Type": "application/json" } }
+    );
+  } catch (err) {
+    return new Response(
+      JSON.stringify({ error: err.message }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
+  }
+});
