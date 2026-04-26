@@ -345,13 +345,12 @@
       if (!valid) return;
 
       setLoading('loginBtn', true);
-      const result = await loginUser(email, password);
-      setLoading('loginBtn', false);
-
-      if (result.error) {
-        showAlert('loginAlert', result.error, 'error');
-      } else {
+      try {
+        await loginUser(email, password);
         window.location.href = 'app.html';
+      } catch (err) {
+        setLoading('loginBtn', false);
+        showAlert('loginAlert', err.message || 'Giriş yapılamadı.', 'error');
       }
     });
 
@@ -373,14 +372,14 @@
       if (!valid) return;
 
       setLoading('registerBtn', true);
-      const result = await registerUser(email, password, adSoyad, telefon);
-      setLoading('registerBtn', false);
-
-      if (result.error) {
-        showAlert('registerAlert', result.error, 'error');
-      } else {
+      try {
+        await registerUser(email, password, adSoyad, telefon);
+        setLoading('registerBtn', false);
         showAlert('registerAlert', 'Kaydınız alındı. Admin onayından sonra giriş yapabilirsiniz.', 'success');
         document.getElementById('registerForm').reset();
+      } catch (err) {
+        setLoading('registerBtn', false);
+        showAlert('registerAlert', err.message || 'Kayıt işlemi başarısız.', 'error');
       }
     });
   </script>

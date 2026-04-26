@@ -27,7 +27,7 @@ export async function generatePDF(data) {
 
   const container = document.createElement('div');
   container.innerHTML = html;
-  container.style.cssText = 'position:absolute;left:-9999px;top:0;width:794px;';
+  container.style.cssText = 'position:fixed;top:0;left:0;width:794px;opacity:0;pointer-events:none;z-index:-9999;';
   document.body.appendChild(container);
 
   const filename = `ByMEY_HotTap_${data.projeNo || 'Hesap'}_${data.operasyonTarihi || ''}.pdf`

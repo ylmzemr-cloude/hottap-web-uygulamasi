@@ -811,8 +811,8 @@ async function saveCalculation() {
             hesaplama: {
               id: calc.id,
               proje_no: state.projeNo,
-              kullanici: currentUser.profile.ad_soyad,
-              tarih: state.operasyonTarihi,
+              kullanici_adi: currentUser.profile.ad_soyad,
+              operasyon_tarihi: state.operasyonTarihi,
             },
           },
         }).catch(() => {});
@@ -901,8 +901,9 @@ function setupMessageForm() {
 
     const { error } = await supabase.functions.invoke('send-email', {
       body: {
-        tip: 'kullanici_mesaj',
-        mesaj: { metin: text, gonderen: currentUser.profile.ad_soyad, email: currentUser.email },
+        tip: 'yonetici_mesaj',
+        kullanici: { ad_soyad: currentUser.profile.ad_soyad, email: currentUser.email },
+        mesaj: text,
       },
     });
 
