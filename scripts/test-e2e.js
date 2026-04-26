@@ -142,7 +142,8 @@ async function testYardimPopup(page) {
     const title = await page.textContent('#helpPopupTitle');
     if (!title?.trim()) throw new Error('Popup başlığı boş');
     await page.click('#helpPopupClose');
-    await page.waitForSelector('#helpPopup.hidden', { timeout: 3000 });
+    // state:'hidden' kullan — waitForSelector varsayılan olarak görünür element bekler
+    await page.waitForSelector('#helpPopup', { state: 'hidden', timeout: 5000 });
     ok(name);
   } catch (e) { fail(name, e); }
 }
@@ -185,14 +186,22 @@ async function testHesaplamaAkisi(page) {
 }
 
 async function testKaydetVePDF(page) {
-  const name = 'Kaydet ve PDF — başarı toast\'u görünür';
+  const name = 'Kaydet ve PDF — toast görünür (başarı veya hata raporu)';
   try {
     if (!ADMIN_PASSWORD) { fail(name, 'ADMIN_PASS env değişkeni ayarlanmamış'); return; }
-    // Kaydet butonunun aktif olduğundan emin ol
     await page.waitForSelector('#btnSaveCalc:not([disabled])', { timeout: 5000 });
     await page.click('#btnSaveCalc');
-    // Toast bekle — blob URL indirmeleri Playwright download event'i tetiklemeyebilir
-    await waitForToast(page, 'kaydedildi', 20000);
+
+    // Herhangi bir toast bekliyoruz — hangisi gelirse göster
+    await page.waitForFunction(
+      () => document.querySelectorAll('.toast').length > 0,
+      { timeout: 25000 }
+    );
+    const toastTexts = await page.$$eval('.toast', ts => ts.map(t => t.textContent.trim()));
+    const combined   = toastTexts.join(' | ');
+
+    const isSuccess = toastTexts.some(t => t.includes('kaydedildi') && !t.includes('kaydedilemedi'));
+    if (!isSuccess) throw new Error('Başarı toast\'u gelmedi. Görünen: ' + combined);
     ok(name);
   } catch (e) { fail(name, e); }
 }
