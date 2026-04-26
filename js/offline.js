@@ -53,9 +53,9 @@ export async function syncPending() {
           body: {
             tip: 'yeni_hesaplama',
             hesaplama: {
-              proje_no: item.data.proje_no,
-              kullanici: item.data.user_display_name,
-              tarih: item.data.operasyon_tarihi,
+              proje_no:         item.data.proje_no,
+              kullanici_adi:    item.data.user_display_name,
+              operasyon_tarihi: item.data.operasyon_tarihi,
             },
           },
         }).catch(() => {});

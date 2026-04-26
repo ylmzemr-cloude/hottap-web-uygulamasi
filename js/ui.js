@@ -778,11 +778,11 @@ async function saveCalculation() {
       user_display_name:  currentUser.profile.ad_soyad,
       proje_no:           state.projeNo,
       operasyon_tarihi:   state.operasyonTarihi,
-      operasyon_verileri: JSON.stringify({
+      operasyonlar: {
         operations: state.operations.map(op => ({ ...op })),
         results: state.results,
         images: imageUrls,
-      }),
+      },
       konum_lat,
       konum_lng,
     };
@@ -861,9 +861,9 @@ async function loadHistory() {
 
   const { data, error } = await supabase
     .from('calculations')
-    .select('id, proje_no, operasyon_tarihi, created_at')
+    .select('id, proje_no, operasyon_tarihi, sistem_kayit_zamani')
     .eq('user_id', currentUser.id)
-    .order('created_at', { ascending: false })
+    .order('sistem_kayit_zamani', { ascending: false })
     .limit(50);
 
   if (error || !data?.length) {
@@ -878,7 +878,7 @@ async function loadHistory() {
     <div class="history-item">
       <div class="history-item__info">
         <div class="history-item__title">${c.proje_no || '—'}</div>
-        <div class="history-item__sub">${c.operasyon_tarihi || ''} &nbsp;·&nbsp; ${new Date(c.created_at).toLocaleDateString('tr-TR')}</div>
+        <div class="history-item__sub">${c.operasyon_tarihi || ''} &nbsp;·&nbsp; ${new Date(c.sistem_kayit_zamani).toLocaleDateString('tr-TR')}</div>
       </div>
       <span class="history-item__arrow">›</span>
     </div>
@@ -1086,8 +1086,8 @@ async function loadAdminCalcs() {
   listEl.innerHTML = '<div style="text-align:center;padding:20px;color:#64748b;">Yükleniyor...</div>';
 
   const { data } = await supabase.from('calculations')
-    .select('id, proje_no, operasyon_tarihi, user_display_name, created_at, konum_lat, konum_lng')
-    .order('created_at', { ascending: false })
+    .select('id, proje_no, operasyon_tarihi, user_display_name, sistem_kayit_zamani, konum_lat, konum_lng')
+    .order('sistem_kayit_zamani', { ascending: false })
     .limit(200);
 
   if (!data?.length) {
@@ -1103,7 +1103,7 @@ async function loadAdminCalcs() {
       <td style="font-size:12px;">${c.operasyon_tarihi || '—'}</td>
       <td>${c.user_display_name || '—'}</td>
       <td>${c.proje_no || '—'}</td>
-      <td style="font-size:11px;">${new Date(c.created_at).toLocaleString('tr-TR')}</td>
+      <td style="font-size:11px;">${new Date(c.sistem_kayit_zamani).toLocaleString('tr-TR')}</td>
       <td style="text-align:center;">${konum}</td>
       <td><button class="btn btn--ghost btn--sm" data-pdf-calc="${c.id}">⬇ PDF</button></td>
     </tr>`;
@@ -1152,7 +1152,7 @@ function attachPdfButtons(container) {
         const { data: calc } = await supabase.from('calculations')
           .select('*').eq('id', btn.dataset.pdfCalc).single();
         if (calc) {
-          const parsed = JSON.parse(calc.operasyon_verileri || '{}');
+          const parsed = calc.operasyonlar || {};
           await generatePDF({
             projeNo:         calc.proje_no,
             operasyonTarihi: calc.operasyon_tarihi,
