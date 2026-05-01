@@ -346,7 +346,7 @@ function cardHotTap(op, pipeOptions, cutterOptions) {
       ${unitToggle('global', id)}
     </div>
 
-    ${inputRow('fieldA-'+id, 'A', '317.500', 'A', id, { unitToggle: true })}
+    ${inputRow('fieldA-'+id, 'A', '317.500', 'A', id, { unitToggle: true, note: 'Pilot uç adaptörden dışarı taşıyorsa negatif değer girin' })}
     ${inputRow('fieldB-'+id, 'B', '203.200', 'B', id, { unitToggle: true })}
     ${inputRow('fieldRef1-'+id, 'Ref1', '6.350', 'Ref1', id, { unitToggle: true, note: 'Negatif değer alabilir' })}
 
@@ -652,13 +652,33 @@ function renderCalcResults(result) {
       <button class="btn btn--primary" data-calculate-op="${state.activeTabId}">Tekrar Hesapla</button>`;
   }
 
+  const RESULT_LABELS = {
+    cutterID:           'Cutter ID',
+    c1:                 'C1',
+    c:                  'C — Kesme Mesafesi',
+    couponFree:         'Coupon Free',
+    catchPosition:      'Catch Position',
+    nestingSpace:       'Nesting Space',
+    pilotTemas:         'Lower-in (Pilot Temas)',
+    maxTapping:         'Max Tapping',
+    maxTravel:          'Max Travel',
+    e:                  'E',
+    stoppleOlcusu:      'Total Set (Stopple)',
+    tekerBoruMerkezi:   'Centerline',
+    tekerTemasMesafesi: 'Roller to Bottom',
+    tapalama:           'Total Set (Tapalama)',
+    delmeSuresi:        'Delme Süresi (dk)',
+    geriAlmaToplam:     'Geri Alma — Total Travel',
+  };
+
   const blocks = Object.entries(result.results || {}).map(([key, calc]) => {
     if (!calc || typeof calc.result !== 'number') return '';
     const val = calc.result.toFixed(3);
     const valInch = mmToInch(calc.result).toFixed(3);
     const stepsHtml = (calc.steps || []).map(s => `<li>${s}</li>`).join('');
+    const title = RESULT_LABELS[key] || key;
     return `<div class="result-block">
-      <div class="result-block__title">${key.toUpperCase()}</div>
+      <div class="result-block__title">${title}</div>
       <div class="result-block__value">${val} <span style="font-size:14px;color:#64748b;">mm</span></div>
       <div class="result-block__value-sub">${valInch}"</div>
       ${stepsHtml ? `<ul class="steps-list">${stepsHtml}</ul>` : ''}
@@ -723,15 +743,18 @@ function calculateGeriAlma(opId) {
   const op = state.operations.find(o => o.id === opId);
   if (!op) return;
 
-  const tapalama = state.results[opId]?.results?.tapalama;
-  if (!tapalama) return showToast('Önce Tapalama hesaplaması yapılmalı.', 'error');
-
   const mMm = parseFloat(document.getElementById('geriM-' + opId)?.value) || null;
   const nMm = parseFloat(document.getElementById('geriN-' + opId)?.value) || null;
 
   if (!mMm || !nMm) return showToast('M ve N değerleri girilmeli.', 'error');
 
-  const result = runGeriAlma({ tapalamaMm: tapalama.result, mMm, nMm });
+  const springTravelMm = op.data.cutterOdNominalInch > 12
+    ? op.data.fMm
+    : op.data.springTravelMm;
+
+  if (!springTravelMm) return showToast('Yay değeri bulunamadı. Önce Tapalama hesaplanmalı.', 'error');
+
+  const result = runGeriAlma({ mMm, nMm, springTravelMm });
   state.results[opId + '-geri'] = result;
   renderActiveTab();
 }

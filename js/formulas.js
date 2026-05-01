@@ -30,6 +30,16 @@ export const formulas = {
     return pipeOdMm - (1 * pipeWallMm);
   },
 
+  // Catch Position — U-teli minimum pozisyon kontrolü
+  catchPosition: (couponFreeMm, ref1Mm, pipeWallMm) => {
+    return (couponFreeMm + ref1Mm) - pipeWallMm;
+  },
+
+  // Nesting Space — Kuponu tutmak için gerekli minimum alan
+  nestingSpace: (couponFreeMm) => {
+    return couponFreeMm + inchToMm(1.0);
+  },
+
   // Coupon Free — Kupon serbest mesafe
   couponFree: (pipeOdMm, cutterOdActualMm) => {
     return Math.sqrt(
@@ -145,6 +155,27 @@ export function calculateCouponFree(pipeOdMm, cutterOdActualMm) {
     'Adim 2: Coupon Free = kok[' + Math.pow(halfPipeOd, 2).toFixed(3) + ' - ' + Math.pow(halfCutterOd, 2).toFixed(3) + ']',
     'Adim 3: Coupon Free = kok[' + (Math.pow(halfPipeOd, 2) - Math.pow(halfCutterOd, 2)).toFixed(3) + ']',
     'Sonuc: Coupon Free = ' + result.toFixed(3) + ' mm  (' + mmToInch(result).toFixed(3) + '")'
+  ];
+  return { steps, result };
+}
+
+export function calculateCatchPosition(couponFreeMm, ref1Mm, pipeWallMm) {
+  const result = parseFloat(formulas.catchPosition(couponFreeMm, ref1Mm, pipeWallMm).toFixed(10));
+  const steps = [
+    'Formul: Catch Position = (CF + Ref1) - Pipe Wall',
+    'Adim 1: Catch Position = (' + couponFreeMm.toFixed(3) + ' + ' + ref1Mm.toFixed(3) + ') - ' + pipeWallMm.toFixed(3),
+    'Sonuc: Catch Position = ' + result.toFixed(3) + ' mm  (' + mmToInch(result).toFixed(3) + '")'
+  ];
+  return { steps, result };
+}
+
+export function calculateNestingSpace(couponFreeMm) {
+  const onInchMm = inchToMm(1.0);
+  const result = parseFloat(formulas.nestingSpace(couponFreeMm).toFixed(10));
+  const steps = [
+    'Formul: Nesting Space = CF + 1.000"',
+    'Adim 1: Nesting Space = ' + couponFreeMm.toFixed(3) + ' + ' + onInchMm.toFixed(3) + ' (1.000")',
+    'Sonuc: Nesting Space = ' + result.toFixed(3) + ' mm  (' + mmToInch(result).toFixed(3) + '")'
   ];
   return { steps, result };
 }

@@ -4,6 +4,8 @@ import {
   calculateC,
   calculateE,
   calculateCouponFree,
+  calculateCatchPosition,
+  calculateNestingSpace,
   calculatePilotTemas,
   calculateMaxTapping,
   calculateMaxTravel,
@@ -50,15 +52,17 @@ export function runHotTap(p) {
   const cutterID    = calculateCutterID(p.cutterOdActualMm, p.cutterWallMm);
   const c1          = calculateC1(p.pipeOdMm, p.pipeIdMm, p.cutterOdActualMm);
   const c           = calculateC(c1.result, p.ref1Mm);
-  const couponFree  = calculateCouponFree(p.pipeOdMm, p.cutterOdActualMm);
-  const pilotTemas  = calculatePilotTemas(p.aMm, p.bMm);
-  const maxTapping  = calculateMaxTapping(p.pipeOdMm, p.ref1Mm);
-  const maxTravel   = calculateMaxTravel(p.aMm, p.bMm, p.pipeOdMm, p.ref1Mm);
+  const couponFree    = calculateCouponFree(p.pipeOdMm, p.cutterOdActualMm);
+  const catchPosition = calculateCatchPosition(couponFree.result, p.ref1Mm, p.pipeWallMm);
+  const nestingSpace  = calculateNestingSpace(couponFree.result);
+  const pilotTemas    = calculatePilotTemas(p.aMm, p.bMm);
+  const maxTapping    = calculateMaxTapping(p.pipeOdMm, p.ref1Mm);
+  const maxTravel     = calculateMaxTravel(p.aMm, p.bMm, p.pipeOdMm, p.ref1Mm);
 
   return {
     valid: true,
     errors: {},
-    results: { cutterID, c1, c, couponFree, pilotTemas, maxTapping, maxTravel },
+    results: { cutterID, c1, c, couponFree, catchPosition, nestingSpace, pilotTemas, maxTapping, maxTravel },
   };
 }
 
