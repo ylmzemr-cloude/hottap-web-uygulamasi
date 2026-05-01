@@ -17,7 +17,7 @@ const state = {
   step: 1,
   projeNo: '',
   operasyonTarihi: '',
-  counts: { hottap: 0, stopple: 0, tapalama: 0 },
+  selected: { hottap: false, stopple: false, tapalama: false, 'geri-alma': false },
   operations: [],   // { id, type, index, data: {} }
   activeTabId: null,
   results: {},      // { opId: { valid, results, errors } }
@@ -112,14 +112,10 @@ function showView(viewId) {
 // ─── Hesaplama Akışı ──────────────────────────────────────────────────────────
 
 function setupCalcFlow() {
-  // Operasyon sayaçları
-  document.querySelectorAll('.counter-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const op = btn.dataset.op;
-      const action = btn.dataset.action;
-      if (action === 'inc') state.counts[op] = Math.min(state.counts[op] + 1, 9);
-      if (action === 'dec') state.counts[op] = Math.max(state.counts[op] - 1, 0);
-      document.getElementById('count-' + op).textContent = state.counts[op];
+  // Operasyon onay kutuları
+  document.querySelectorAll('.op-checkbox input[type="checkbox"]').forEach(cb => {
+    cb.addEventListener('change', () => {
+      state.selected[cb.dataset.op] = cb.checked;
     });
   });
 
@@ -155,7 +151,7 @@ function validateStep1() {
   const alertEl = document.getElementById('stepProjectAlert');
   const projeNo = document.getElementById('projeNo').value.trim();
   const tarih   = document.getElementById('operasyonTarihi').value;
-  const total   = state.counts.hottap + state.counts.stopple + state.counts.tapalama;
+  const anySelected = Object.values(state.selected).some(v => v);
 
   if (!projeNo) {
     showEl(alertEl, 'Proje No gereklidir.');
@@ -165,8 +161,12 @@ function validateStep1() {
     showEl(alertEl, 'Operasyon tarihi gereklidir.');
     return false;
   }
-  if (total === 0) {
-    showEl(alertEl, 'En az bir operasyon ekleyin.');
+  if (!anySelected) {
+    showEl(alertEl, 'En az bir operasyon seçin.');
+    return false;
+  }
+  if (state.selected.stopple && !state.selected.hottap) {
+    showEl(alertEl, 'Stopple için HotTap zorunludur. HotTap\'ı da seçin.');
     return false;
   }
 
@@ -191,24 +191,21 @@ function goToStep(n) {
 // ─── Operasyon Listesi ────────────────────────────────────────────────────────
 
 function buildOperations() {
+  // Mevcut data'yı koru (ileri-geri'de kaybolmasın)
+  const prevData = {};
+  for (const op of state.operations) prevData[op.type] = op.data;
+
   state.operations = [];
-  state.images = {};
-  let htIdx = 0, stIdx = 0, tpIdx = 0;
+  // Seçimleri sabit sırada ekle: HotTap → Stopple → Tapalama → Tapa Geri Alma
+  if (state.selected.hottap)     state.operations.push({ id: 'ht-1', type: 'hottap',    index: 1, data: prevData.hottap    || {} });
+  if (state.selected.stopple)    state.operations.push({ id: 'st-1', type: 'stopple',   index: 1, data: prevData.stopple   || {} });
+  if (state.selected.tapalama)   state.operations.push({ id: 'tp-1', type: 'tapalama',  index: 1, data: prevData.tapalama  || {} });
+  if (state.selected['geri-alma']) state.operations.push({ id: 'ga-1', type: 'geri-alma', index: 1, data: prevData['geri-alma'] || {} });
 
-  for (let i = 0; i < state.counts.hottap; i++) {
-    htIdx++;
-    state.operations.push({ id: 'ht-' + htIdx, type: 'hottap', index: htIdx, data: {} });
-  }
-  for (let i = 0; i < state.counts.stopple; i++) {
-    stIdx++;
-    state.operations.push({ id: 'st-' + stIdx, type: 'stopple', index: stIdx, data: {} });
-  }
-  for (let i = 0; i < state.counts.tapalama; i++) {
-    tpIdx++;
-    state.operations.push({ id: 'tp-' + tpIdx, type: 'tapalama', index: tpIdx, data: {} });
-  }
-
-  state.results = {};
+  // Aktif olmayan operasyonların image/result kayıtlarını temizle
+  const activeIds = new Set(state.operations.map(o => o.id));
+  for (const k of Object.keys(state.images))  if (!activeIds.has(k)) delete state.images[k];
+  for (const k of Object.keys(state.results)) if (!activeIds.has(k)) delete state.results[k];
   state.activeTabId = state.operations[0]?.id || null;
 }
 
@@ -220,9 +217,10 @@ function renderOperationCards() {
   const hottapOps    = state.operations.filter(o => o.type === 'hottap');
 
   const html = state.operations.map(op => {
-    if (op.type === 'hottap')   return cardHotTap(op, pipeOptions, cutterOptions);
-    if (op.type === 'stopple')  return cardStopple(op, hottapOps);
-    if (op.type === 'tapalama') return cardTapalama(op, hottapOps);
+    if (op.type === 'hottap')    return cardHotTap(op, pipeOptions, cutterOptions);
+    if (op.type === 'stopple')   return cardStopple(op, hottapOps);
+    if (op.type === 'tapalama')  return cardTapalama(op, hottapOps, cutterOptions);
+    if (op.type === 'geri-alma') return cardGeriAlma(op, cutterOptions, hottapOps);
     return '';
   }).join('');
 
@@ -237,15 +235,21 @@ function renderOperationCards() {
     });
   });
 
-  // Cutter OD değişince Pipe OD ile kıyaslama
+  // Cutter OD değişince Pipe OD ile kıyaslama + bağlı kartların >12" alanlarını güncelle
   document.querySelectorAll('.sel-cutterOd').forEach(sel => {
-    sel.addEventListener('change', () => validateCutterVsPipe(sel));
+    sel.addEventListener('change', () => {
+      validateCutterVsPipe(sel);
+      updateConditionalFields();
+    });
   });
 
   // Pipe OD değişince cutter listesini filtrele
   document.querySelectorAll('.sel-pipeOd').forEach(sel => {
     sel.addEventListener('change', () => filterCutterByPipe(sel));
   });
+
+  // İlk render'dan sonra mevcut seçimlere göre conditional alanları ayarla
+  updateConditionalFields();
 
   // Resim yükleme olayları
   document.querySelectorAll('.op-card').forEach(card => {
@@ -267,6 +271,35 @@ function buildCutterOptions(maxInch = 999) {
   const rows = getAllCutterData().filter(r => r.cutter_nominal_inch <= maxInch);
   return '<option value="">— Seçiniz —</option>' +
     rows.map(r => `<option value="${r.cutter_nominal_inch}">${r.cutter_nominal_inch}"  (actual: ${r.cutter_actual_mm} mm)</option>`).join('');
+}
+
+function updateConditionalFields() {
+  // HotTap'ın cutter OD'sini al (varsa)
+  const hotTapCard = document.querySelector('.op-card[data-op-type="hottap"]');
+  const hotTapCutter = hotTapCard
+    ? parseFloat(hotTapCard.querySelector('.sel-cutterOd')?.value) || 0
+    : 0;
+
+  for (const op of state.operations) {
+    if (op.type !== 'tapalama' && op.type !== 'geri-alma') continue;
+    const card = document.querySelector(`.op-card[data-op-id="${op.id}"]`);
+    if (!card) continue;
+
+    // HotTap yoksa kendi cutter seçimine bak
+    let cutterInch = hotTapCutter;
+    if (!cutterInch) cutterInch = parseFloat(card.querySelector('.sel-cutterOd')?.value) || 0;
+
+    const isLargerThan12 = cutterInch > 12;
+
+    if (op.type === 'tapalama') {
+      const fField = document.getElementById('fField-' + op.id);
+      if (fField) fField.classList.toggle('hidden', !isLargerThan12);
+    }
+    if (op.type === 'geri-alma') {
+      const springField = document.getElementById('gaSpringField-' + op.id);
+      if (springField) springField.classList.toggle('hidden', !isLargerThan12);
+    }
+  }
 }
 
 function filterCutterByPipe(pipeSelect) {
@@ -385,20 +418,10 @@ function cardHotTap(op, pipeOptions, cutterOptions) {
 
 function cardStopple(op, hottapOps) {
   const id = op.id;
-  const htOptions = hottapOps.map(ht =>
-    `<option value="${ht.id}">HotTap #${ht.index}</option>`
-  ).join('');
 
   return `<div class="card op-card" data-op-id="${id}" data-op-type="stopple">
-    <p class="card__title">Stopple #${op.index}</p>
-    <p style="font-size:12px;color:#64748b;margin-bottom:14px;">Cutter OD = Pipe OD (çapa çap) zorunludur.</p>
-
-    <div class="field">
-      <label for="stHottap-${id}">Bağlı HotTap</label>
-      <select id="stHottap-${id}" class="select-field">
-        ${htOptions || '<option value="">HotTap operasyonu yok</option>'}
-      </select>
-    </div>
+    <p class="card__title">Stopple — Tıkama</p>
+    <p style="font-size:12px;color:#64748b;margin-bottom:14px;">Cutter OD = Pipe OD (çapa çap) zorunludur. HotTap verilerini kullanır.</p>
 
     <div class="field">
       <label>Ölçü Birimi</label>
@@ -418,21 +441,23 @@ function cardStopple(op, hottapOps) {
   </div>`;
 }
 
-function cardTapalama(op, hottapOps) {
+function cardTapalama(op, hottapOps, cutterOptions) {
   const id = op.id;
-  const htOptions = hottapOps.map(ht =>
-    `<option value="${ht.id}">HotTap #${ht.index}</option>`
-  ).join('');
+  const hasHotTap = hottapOps.length > 0;
+
+  // Eğer HotTap varsa cutter oradan otomatik gelir, yoksa kullanıcı seçer
+  const cutterSection = hasHotTap
+    ? `<p style="font-size:12px;color:#64748b;margin-bottom:14px;">HotTap'taki Cutter OD'ye göre yay otomatik belirlenir.</p>`
+    : `<div class="field">
+        <label for="cutterOd-${id}">Cutter OD ${helpBtn('CutterOD')}</label>
+        <select id="cutterOd-${id}" class="select-field sel-cutterOd">${cutterOptions}</select>
+        <span class="field-error" id="cutterOd-${id}Err" role="alert"></span>
+      </div>`;
 
   return `<div class="card op-card" data-op-id="${id}" data-op-type="tapalama">
-    <p class="card__title">Tapalama #${op.index}</p>
+    <p class="card__title">Tapalama — Tamamlama</p>
 
-    <div class="field">
-      <label for="tpHottap-${id}">Bağlı HotTap</label>
-      <select id="tpHottap-${id}" class="select-field">
-        ${htOptions || '<option value="">HotTap operasyonu yok</option>'}
-      </select>
-    </div>
+    ${cutterSection}
 
     <div class="field">
       <label>Ölçü Birimi</label>
@@ -444,6 +469,45 @@ function cardTapalama(op, hottapOps) {
 
     <div id="fField-${id}" class="hidden">
       ${inputRow('fieldF-'+id, 'F  (>12" cutter)', '0.000', 'F', id, { unitToggle: true })}
+    </div>
+
+    <div class="image-uploader" data-op-id="${id}">
+      <div class="image-uploader__previews" id="previews-${id}"></div>
+      <label class="image-uploader__btn" for="imgInput-${id}" id="imgAddBtn-${id}">
+        📷 Resim Ekle (0/5)
+      </label>
+      <input type="file" id="imgInput-${id}" accept="image/*" multiple hidden>
+    </div>
+  </div>`;
+}
+
+function cardGeriAlma(op, cutterOptions, hottapOps) {
+  const id = op.id;
+  const hasHotTap = hottapOps.length > 0;
+
+  const cutterSection = hasHotTap
+    ? `<p style="font-size:12px;color:#64748b;margin-bottom:14px;">HotTap'taki Cutter OD'ye göre yay otomatik belirlenir.</p>`
+    : `<div class="field">
+        <label for="cutterOd-${id}">Cutter OD ${helpBtn('CutterOD')}</label>
+        <select id="cutterOd-${id}" class="select-field sel-cutterOd">${cutterOptions}</select>
+        <span class="field-error" id="cutterOd-${id}Err" role="alert"></span>
+      </div>`;
+
+  return `<div class="card op-card" data-op-id="${id}" data-op-type="geri-alma">
+    <p class="card__title">Tapa Geri Alma</p>
+
+    ${cutterSection}
+
+    <div class="field">
+      <label>Ölçü Birimi</label>
+      ${unitToggle('global', id)}
+    </div>
+
+    ${inputRow('fieldM-'+id, 'M', '0.000', 'M', id, { unitToggle: true })}
+    ${inputRow('fieldN-'+id, 'N', '0.000', 'N', id, { unitToggle: true })}
+
+    <div id="gaSpringField-${id}" class="hidden">
+      ${inputRow('fieldGaSpring-'+id, 'Yay (>12" cutter)', '0.000', 'Y', id, { unitToggle: true })}
     </div>
 
     <div class="image-uploader" data-op-id="${id}">
@@ -499,13 +563,12 @@ function collectFormData() {
 
     if (op.type === 'stopple') {
       const unit = getUnit('global', id);
-      const linkedId = document.getElementById('stHottap-' + id)?.value;
-      const linked = state.operations.find(o => o.id === linkedId);
+      // Tek HotTap olduğu için otomatik bağlanır
+      const hotTap = state.operations.find(o => o.type === 'hottap');
 
       op.data = {
-        linkedHottapId: linkedId,
-        // Pipe/cutter bilgileri bağlı HotTap'tan alınır
-        ...(linked?.data || {}),
+        linkedHottapId: hotTap?.id || null,
+        ...(hotTap?.data || {}),
         dMm:    getFieldMm('fieldD-'    + id, unit),
         ref2Mm: getFieldMm('fieldRef2-' + id, unit),
       };
@@ -513,13 +576,14 @@ function collectFormData() {
 
     if (op.type === 'tapalama') {
       const unit = getUnit('global', id);
-      const linkedId = document.getElementById('tpHottap-' + id)?.value;
-      const linked = state.operations.find(o => o.id === linkedId);
-      const cutterNominal = linked?.data?.cutterOdNominalInch || null;
+      const hotTap = state.operations.find(o => o.type === 'hottap');
+      // HotTap varsa cutter ondan, yoksa kullanıcı seçiminden
+      const cutterFromForm = parseFloat(document.getElementById('cutterOd-' + id)?.value) || null;
+      const cutterNominal = hotTap?.data?.cutterOdNominalInch ?? cutterFromForm;
       const springRow = cutterNominal ? getSpringRow(cutterNominal) : null;
 
       op.data = {
-        linkedHottapId:      linkedId,
+        linkedHottapId:      hotTap?.id || null,
         cutterOdNominalInch: cutterNominal,
         springTravelMm:      springRow?.spring_travel_mm ?? null,
         gMm:  getFieldMm('fieldG-' + id, unit),
@@ -527,12 +591,32 @@ function collectFormData() {
         fMm:  getFieldMm('fieldF-' + id, unit),
       };
     }
+
+    if (op.type === 'geri-alma') {
+      const unit = getUnit('global', id);
+      const hotTap = state.operations.find(o => o.type === 'hottap');
+      const cutterFromForm = parseFloat(document.getElementById('cutterOd-' + id)?.value) || null;
+      const cutterNominal = hotTap?.data?.cutterOdNominalInch ?? cutterFromForm;
+      const springRow = cutterNominal ? getSpringRow(cutterNominal) : null;
+      const isLargerThan12 = (cutterNominal || 0) > 12;
+      // ≤12" tablodan, >12" kullanıcı girer
+      const springTravelMm = isLargerThan12
+        ? getFieldMm('fieldGaSpring-' + id, unit)
+        : (springRow?.spring_travel_mm ?? null);
+
+      op.data = {
+        cutterOdNominalInch: cutterNominal,
+        springTravelMm,
+        mMm: getFieldMm('fieldM-' + id, unit),
+        nMm: getFieldMm('fieldN-' + id, unit),
+      };
+    }
   }
 }
 
 // ─── Sekme Oluşturma ──────────────────────────────────────────────────────────
 
-const OP_LABEL = { hottap: 'HT', stopple: 'ST', tapalama: 'TP' };
+const OP_LABEL = { hottap: 'HT', stopple: 'ST', tapalama: 'TP', 'geri-alma': 'GA' };
 
 function buildResultTabs() {
   const tabsEl = document.getElementById('resultTabs');
@@ -575,33 +659,21 @@ function renderActiveTab() {
   const contentEl = document.getElementById('resultContent');
   const result = state.results[op.id];
 
-  const typeLabel = { hottap: 'HotTap', stopple: 'Stopple', tapalama: 'Tapalama' };
+  const typeLabel = { hottap: 'HotTap', stopple: 'Stopple', tapalama: 'Tapalama', 'geri-alma': 'Tapa Geri Alma' };
 
-  let html = `<div class="card">
-    <p class="card__title">${typeLabel[op.type]} #${op.index}</p>
+  const html = `<div class="card">
+    <p class="card__title">${typeLabel[op.type]}</p>
     ${renderDataSummary(op)}
     ${result ? renderCalcResults(result) : `
       <button class="btn btn--primary" data-calculate-op="${op.id}">Hesapla</button>
     `}
   </div>`;
 
-  // Tapalama için Geri Alma bölümü
-  if (op.type === 'tapalama' && result?.valid) {
-    html += renderGeriAlmaSection(op);
-  }
-
   contentEl.innerHTML = html;
 
-  // Hesapla butonu olayı
   const calcBtn = contentEl.querySelector('[data-calculate-op]');
   if (calcBtn) {
     calcBtn.addEventListener('click', () => calculateOp(op.id));
-  }
-
-  // Geri Alma olayı
-  const geriBtn = contentEl.querySelector('[data-geri-alma-op]');
-  if (geriBtn) {
-    geriBtn.addEventListener('click', () => calculateGeriAlma(op.id));
   }
 
   checkAllDone();
@@ -629,12 +701,18 @@ function renderDataSummary(op) {
   }
 
   if (op.type === 'tapalama') {
-    const linked = state.operations.find(o => o.id === d.linkedHottapId);
-    if (linked) rows.push(['Bağlı HotTap', 'HotTap #' + linked.index]);
+    if (d.cutterOdNominalInch) rows.push(['Cutter OD', d.cutterOdNominalInch + '"']);
     if (d.gMm != null) rows.push(['G', d.gMm.toFixed(3) + ' mm']);
     if (d.hMm != null) rows.push(['H', d.hMm.toFixed(3) + ' mm']);
     if (d.springTravelMm != null) rows.push(['Y (yay)', d.springTravelMm.toFixed(3) + ' mm']);
     if (d.fMm != null) rows.push(['F', d.fMm.toFixed(3) + ' mm']);
+  }
+
+  if (op.type === 'geri-alma') {
+    if (d.cutterOdNominalInch) rows.push(['Cutter OD', d.cutterOdNominalInch + '"']);
+    if (d.mMm != null) rows.push(['M', d.mMm.toFixed(3) + ' mm']);
+    if (d.nMm != null) rows.push(['N', d.nMm.toFixed(3) + ' mm']);
+    if (d.springTravelMm != null) rows.push(['Yay', d.springTravelMm.toFixed(3) + ' mm']);
   }
 
   if (!rows.length) return '';
@@ -690,28 +768,6 @@ function renderCalcResults(result) {
   return blocks || '<div class="alert alert--info">Sonuç bulunamadı.</div>';
 }
 
-function renderGeriAlmaSection(op) {
-  const geriResult = state.results[op.id + '-geri'];
-  const tapalResult = state.results[op.id]?.results?.tapalama;
-
-  return `<div class="card" style="margin-top:12px;">
-    <p class="card__title">Tapalama #${op.index} — Geri Alma Hesabı <span class="card__subtitle">(Opsiyonel)</span></p>
-    ${geriResult ? renderCalcResults(geriResult) : `
-      <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <div class="field" style="flex:1;min-width:120px;">
-          <label for="geriM-${op.id}">M ${helpBtn('M')}</label>
-          <input type="number" id="geriM-${op.id}" class="input-field" step="0.001" placeholder="0.000">
-        </div>
-        <div class="field" style="flex:1;min-width:120px;">
-          <label for="geriN-${op.id}">N ${helpBtn('N')}</label>
-          <input type="number" id="geriN-${op.id}" class="input-field" step="0.001" placeholder="0.000">
-        </div>
-      </div>
-      <button class="btn btn--ghost btn--sm" data-geri-alma-op="${op.id}" style="margin-top:8px;">Hesapla</button>
-    `}
-  </div>`;
-}
-
 // ─── Hesaplama ────────────────────────────────────────────────────────────────
 
 function calculateOp(opId) {
@@ -733,32 +789,14 @@ function calculateOp(opId) {
     result = runStopple(op.data);
   } else if (op.type === 'tapalama') {
     result = runTapalama(op.data);
+  } else if (op.type === 'geri-alma') {
+    result = runGeriAlma(op.data);
   }
 
   state.results[opId] = result;
   updateTabStatus(opId, result?.valid ? 'done' : 'incomplete');
   renderActiveTab();
   checkAllDone();
-}
-
-function calculateGeriAlma(opId) {
-  const op = state.operations.find(o => o.id === opId);
-  if (!op) return;
-
-  const mMm = parseFloat(document.getElementById('geriM-' + opId)?.value) || null;
-  const nMm = parseFloat(document.getElementById('geriN-' + opId)?.value) || null;
-
-  if (!mMm || !nMm) return showToast('M ve N değerleri girilmeli.', 'error');
-
-  const springTravelMm = op.data.cutterOdNominalInch > 12
-    ? op.data.fMm
-    : op.data.springTravelMm;
-
-  if (!springTravelMm) return showToast('Yay değeri bulunamadı. Önce Tapalama hesaplanmalı.', 'error');
-
-  const result = runGeriAlma({ mMm, nMm, springTravelMm });
-  state.results[opId + '-geri'] = result;
-  renderActiveTab();
 }
 
 function checkAllDone() {

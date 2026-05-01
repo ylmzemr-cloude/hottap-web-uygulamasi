@@ -3,7 +3,7 @@ import { mmToInch } from './units.js';
 // html2pdf.js CDN'den yüklenir (app.html'deki <script> tag'i)
 // window.html2pdf olarak erişilir
 
-const OP_TYPE_TR = { hottap: 'HotTap', stopple: 'Stopple', tapalama: 'Tapalama' };
+const OP_TYPE_TR = { hottap: 'HotTap', stopple: 'Stopple', tapalama: 'Tapalama', 'geri-alma': 'Tapa Geri Alma' };
 
 // ─── Ana PDF Üretim Fonksiyonu ────────────────────────────────────────────────
 
@@ -148,10 +148,18 @@ function buildInputTable(op) {
   }
 
   if (op.type === 'tapalama') {
+    if (d.cutterOdNominalInch) rows.push(['Cutter OD', `${d.cutterOdNominalInch}"`]);
     if (d.gMm != null)        rows.push(['G',    fmtBoth(d.gMm)]);
     if (d.hMm != null)        rows.push(['H',    fmtBoth(d.hMm)]);
     if (d.springTravelMm != null) rows.push(['Y (yay)', fmtBoth(d.springTravelMm)]);
     if (d.fMm != null)        rows.push(['F',    fmtBoth(d.fMm)]);
+  }
+
+  if (op.type === 'geri-alma') {
+    if (d.cutterOdNominalInch) rows.push(['Cutter OD', `${d.cutterOdNominalInch}"`]);
+    if (d.mMm != null)        rows.push(['M',    fmtBoth(d.mMm)]);
+    if (d.nMm != null)        rows.push(['N',    fmtBoth(d.nMm)]);
+    if (d.springTravelMm != null) rows.push(['Yay', fmtBoth(d.springTravelMm)]);
   }
 
   if (!rows.length) return '';

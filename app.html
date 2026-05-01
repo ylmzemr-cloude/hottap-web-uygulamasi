@@ -79,28 +79,29 @@
         </div>
 
         <div class="card">
-          <p class="card__title">Operasyon Sayıları</p>
+          <p class="card__title">Operasyon Seçimi</p>
+          <p style="font-size:13px;color:#64748b;margin-bottom:12px;">Yapılacak operasyonları işaretleyin (her tipten en fazla 1 tane).</p>
 
-          <div class="op-counter">
-            <span class="op-counter__label">HotTap</span>
-            <button class="counter-btn" data-op="hottap" data-action="dec">−</button>
-            <span class="counter-value" id="count-hottap">0</span>
-            <button class="counter-btn" data-op="hottap" data-action="inc">+</button>
-          </div>
+          <label class="op-checkbox">
+            <input type="checkbox" id="op-hottap" data-op="hottap">
+            <span class="op-checkbox__label">HotTap (Delme)</span>
+          </label>
 
-          <div class="op-counter">
-            <span class="op-counter__label">Stopple</span>
-            <button class="counter-btn" data-op="stopple" data-action="dec">−</button>
-            <span class="counter-value" id="count-stopple">0</span>
-            <button class="counter-btn" data-op="stopple" data-action="inc">+</button>
-          </div>
+          <label class="op-checkbox">
+            <input type="checkbox" id="op-stopple" data-op="stopple">
+            <span class="op-checkbox__label">Stopple (Tıkama)</span>
+            <small class="op-checkbox__note">HotTap zorunlu</small>
+          </label>
 
-          <div class="op-counter">
-            <span class="op-counter__label">Tapalama</span>
-            <button class="counter-btn" data-op="tapalama" data-action="dec">−</button>
-            <span class="counter-value" id="count-tapalama">0</span>
-            <button class="counter-btn" data-op="tapalama" data-action="inc">+</button>
-          </div>
+          <label class="op-checkbox">
+            <input type="checkbox" id="op-tapalama" data-op="tapalama">
+            <span class="op-checkbox__label">Tapalama (Tamamlama)</span>
+          </label>
+
+          <label class="op-checkbox">
+            <input type="checkbox" id="op-geri-alma" data-op="geri-alma">
+            <span class="op-checkbox__label">Tapa Geri Alma</span>
+          </label>
         </div>
 
         <div id="stepProjectAlert" class="alert alert--error hidden"></div>
