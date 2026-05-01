@@ -4,6 +4,7 @@
  */
 
 import { formulas, calculateC1, calculateC, calculateE, calculateCouponFree,
+         calculateCatchPosition, calculateNestingSpace,
          calculatePilotTemas, calculateMaxTapping, calculateMaxTravel,
          calculateStoppleOlcusu, calculateTekerBoruMerkezi,
          calculateTekerTemasMesafesi, calculateTapalama,
@@ -118,6 +119,14 @@ const expectedCF = Math.sqrt(
   Math.pow(TC1.pipeOdMm / 2, 2) - Math.pow(TC1.cutterOdActualMm / 2, 2)
 );
 assert('Coupon Free', cfResult, expectedCF, 0.001);
+
+// Catch Position = (CF + Ref1) - Pipe Wall
+const { result: catchResult } = calculateCatchPosition(cfResult, TC1.ref1Mm, pipeWallMm);
+assert('Catch Position', catchResult, (cfResult + TC1.ref1Mm) - pipeWallMm, 0.001);
+
+// Nesting Space = CF + 25.4 mm (1")
+const { result: nestResult } = calculateNestingSpace(cfResult);
+assert('Nesting Space', nestResult, cfResult + inchToMm(1.0), 0.001);
 
 // ─── Negatif Ref1 edge case ────────────────────────────────────────────────────
 // C = C1 + (-5.0) → C1'den küçük olmalı

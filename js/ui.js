@@ -3,6 +3,7 @@ import { getCurrentUser, logoutUser, checkDemoLimit, decrementDemoHak,
 import { initTables, getAllPipeData, getAllCutterData, getAllSpringData,
          getPipeRow, getCutterRow, getSpringRow } from './tables.js';
 import { runHotTap, runStopple, runTapalama, runKKM, runGeriAlma, toMm } from './calculator.js';
+import { calculateDelmeSuresi } from './formulas.js';
 import { inchToMm, mmToInch } from './units.js';
 import { supabase } from './supabase.js';
 import { generatePDF } from './pdf.js';
@@ -45,6 +46,7 @@ async function init() {
   setupCalcFlow();
   setupHelpPopup();
   setupMessageForm();
+  setupOpSure();
   showView('new-calc');
 }
 
@@ -939,6 +941,92 @@ function setupMessageForm() {
       document.getElementById('messageText').value = '';
     }
   });
+}
+
+// ─── Operasyon Süresi ─────────────────────────────────────────────────────────
+
+function setupOpSure() {
+  const toggle    = document.getElementById('opSureMachineToggle');
+  const feedInput = document.getElementById('opSureFeedRate');
+  const feedNote  = document.getElementById('opSureFeedNote');
+  const kkmInput  = document.getElementById('opSureKkm');
+  const rpmInput  = document.getElementById('opSureRpm');
+  const resultEl  = document.getElementById('opSureResult');
+  const resultVal = document.getElementById('opSureResultValue');
+  const resultSteps = document.getElementById('opSureSteps');
+
+  let machine = 'T203';
+
+  function applyMachine(m) {
+    machine = m;
+    toggle.querySelectorAll('.unit-toggle__btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.machine === m);
+    });
+    if (m === '1200') {
+      feedInput.value = '0.004';
+      feedInput.readOnly = true;
+      feedInput.style.background = '#f8fafc';
+      feedInput.style.color = '#64748b';
+      feedNote.textContent = '1200 serisi için sabit 0.004"/dev — değiştirilemez';
+    } else {
+      feedInput.value = '';
+      feedInput.readOnly = false;
+      feedInput.style.background = '';
+      feedInput.style.color = '';
+      feedNote.textContent = 'T-203 için 0 ile 0.125" arası operatör girer';
+    }
+    resultEl.classList.add('hidden');
+    clearOpSureErrors();
+  }
+
+  function clearOpSureErrors() {
+    ['opSureKkmErr', 'opSureRpmErr', 'opSureFeedRateErr'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = '';
+    });
+  }
+
+  function showFieldError(id, msg) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = msg;
+  }
+
+  toggle.querySelectorAll('.unit-toggle__btn').forEach(btn => {
+    btn.addEventListener('click', () => applyMachine(btn.dataset.machine));
+  });
+
+  document.getElementById('btnOpSureHesapla').addEventListener('click', () => {
+    clearOpSureErrors();
+    resultEl.classList.add('hidden');
+
+    const kkm = parseFloat(kkmInput.value);
+    const rpm = parseFloat(rpmInput.value);
+    const feed = parseFloat(feedInput.value);
+
+    let valid = true;
+    if (!kkm || kkm <= 0) { showFieldError('opSureKkmErr', 'Geçerli bir KKM/C değeri girin.'); valid = false; }
+    if (!rpm || rpm <= 0) { showFieldError('opSureRpmErr', 'Geçerli bir RPM girin.'); valid = false; }
+    if (!feed || feed <= 0) { showFieldError('opSureFeedRateErr', 'Geçerli bir Feed Rate girin.'); valid = false; }
+    if (machine === 'T203' && feed > 0.125) {
+      showFieldError('opSureFeedRateErr', 'T-203 için maksimum 0.125" girilebilir.');
+      valid = false;
+    }
+    if (!valid) return;
+
+    const calc = calculateDelmeSuresi(kkm, rpm, feed);
+    resultVal.textContent = calc.result.toFixed(2);
+    resultSteps.innerHTML = (calc.steps || []).map(s => `<li>${s}</li>`).join('');
+    resultEl.classList.remove('hidden');
+  });
+
+  document.getElementById('btnOpSureReset').addEventListener('click', () => {
+    kkmInput.value = '';
+    rpmInput.value = '';
+    applyMachine('T203');
+  });
+
+  // İlk durumu uygula
+  applyMachine('T203');
 }
 
 // ─── Admin — Bekleyenler ──────────────────────────────────────────────────────
