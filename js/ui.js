@@ -19,7 +19,8 @@ const state = {
   operasyonTarihi: '',
   selected: { hottap: false, stopple: false, tapalama: false, 'geri-alma': false },
   operations: [],   // { id, type, index, data: {} }
-  activeTabId: null,
+  activeTabId: null,    // current page id (op.id veya 'summary')
+  activePageIdx: 0,     // current page numerical index
   results: {},      // { opId: { valid, results, errors } }
   images: {},       // { opId: [{ file, url, name }] }
 };
@@ -207,6 +208,7 @@ function buildOperations() {
   for (const k of Object.keys(state.images))  if (!activeIds.has(k)) delete state.images[k];
   for (const k of Object.keys(state.results)) if (!activeIds.has(k)) delete state.results[k];
   state.activeTabId = state.operations[0]?.id || null;
+  state.activePageIdx = 0;
 }
 
 // ─── Kart Şablonları ──────────────────────────────────────────────────────────
@@ -614,19 +616,41 @@ function collectFormData() {
   }
 }
 
-// ─── Sekme Oluşturma ──────────────────────────────────────────────────────────
+// ─── Sayfa Sayfa Sonuç Akışı ──────────────────────────────────────────────────
 
 const OP_LABEL = { hottap: 'HT', stopple: 'ST', tapalama: 'TP', 'geri-alma': 'GA' };
+const TYPE_LABEL = { hottap: 'HotTap', stopple: 'Stopple', tapalama: 'Tapalama', 'geri-alma': 'Tapa Geri Alma' };
+
+function getResultPages() {
+  // Operasyon sayfaları + en son özet/kaydet sayfası
+  return [...state.operations.map(o => ({ id: o.id, type: o.type, op: o })),
+          { id: 'summary', type: 'summary' }];
+}
 
 function buildResultTabs() {
   const tabsEl = document.getElementById('resultTabs');
+  const pages = getResultPages();
 
-  tabsEl.innerHTML = state.operations.map(op => {
-    const label = OP_LABEL[op.type] + '#' + op.index;
-    const status = state.results[op.id]?.valid === true ? 'done' : 'pending';
-    const icon   = status === 'done' ? '✓' : '○';
-    return `<button class="tab tab--${status}${op.id === state.activeTabId ? ' tab--active' : ''}"
-      data-op-id="${op.id}">
+  // İlk açılışta state.activePageIdx ayarla
+  if (state.activePageIdx == null || state.activePageIdx >= pages.length) {
+    state.activePageIdx = 0;
+  }
+  state.activeTabId = pages[state.activePageIdx]?.id || null;
+
+  tabsEl.innerHTML = pages.map((p, i) => {
+    let label, status, icon;
+    if (p.type === 'summary') {
+      label = 'Özet';
+      const allDone = state.operations.every(o => state.results[o.id]?.valid === true);
+      status = allDone ? 'done' : 'pending';
+      icon = allDone ? '✓' : 'Σ';
+    } else {
+      label = OP_LABEL[p.type];
+      status = state.results[p.id]?.valid === true ? 'done' : 'pending';
+      icon = status === 'done' ? '✓' : '○';
+    }
+    return `<button class="tab tab--${status}${i === state.activePageIdx ? ' tab--active' : ''}"
+      data-page-idx="${i}">
       <span class="tab__icon">${icon}</span>
       ${label}
     </button>`;
@@ -634,18 +658,20 @@ function buildResultTabs() {
 
   tabsEl.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', () => {
-      state.activeTabId = tab.dataset.opId;
-      tabsEl.querySelectorAll('.tab').forEach(t => t.classList.remove('tab--active'));
-      tab.classList.add('tab--active');
+      state.activePageIdx = parseInt(tab.dataset.pageIdx, 10);
       renderActiveTab();
     });
   });
 }
 
 function updateTabStatus(opId, status) {
-  const tab = document.querySelector(`.tab[data-op-id="${opId}"]`);
+  // page index üzerinden bul
+  const pages = getResultPages();
+  const idx = pages.findIndex(p => p.id === opId);
+  if (idx < 0) return;
+  const tab = document.querySelector(`.tab[data-page-idx="${idx}"]`);
   if (!tab) return;
-  tab.className = 'tab tab--' + status + (opId === state.activeTabId ? ' tab--active' : '');
+  tab.className = 'tab tab--' + status + (idx === state.activePageIdx ? ' tab--active' : '');
   const icons = { pending: '○', incomplete: '⚠', done: '✓' };
   tab.querySelector('.tab__icon').textContent = icons[status] || '○';
 }
@@ -653,31 +679,106 @@ function updateTabStatus(opId, status) {
 // ─── Sonuç Render ─────────────────────────────────────────────────────────────
 
 function renderActiveTab() {
-  const op = state.operations.find(o => o.id === state.activeTabId);
-  if (!op) return;
+  const pages = getResultPages();
+  const page = pages[state.activePageIdx];
+  if (!page) return;
 
   const contentEl = document.getElementById('resultContent');
-  const result = state.results[op.id];
 
-  const typeLabel = { hottap: 'HotTap', stopple: 'Stopple', tapalama: 'Tapalama', 'geri-alma': 'Tapa Geri Alma' };
+  let html;
+  if (page.type === 'summary') {
+    html = renderSummaryPage();
+  } else {
+    const op = page.op;
+    const result = state.results[op.id];
+    html = `<div class="card">
+      <p class="card__title">${TYPE_LABEL[op.type]}</p>
+      ${renderDataSummary(op)}
+      ${result ? renderCalcResults(result) : `
+        <button class="btn btn--primary" data-calculate-op="${op.id}">Hesapla</button>
+      `}
+    </div>`;
+  }
 
-  const html = `<div class="card">
-    <p class="card__title">${typeLabel[op.type]}</p>
-    ${renderDataSummary(op)}
-    ${result ? renderCalcResults(result) : `
-      <button class="btn btn--primary" data-calculate-op="${op.id}">Hesapla</button>
-    `}
+  // Önceki / Sonraki butonları
+  const prevDisabled = state.activePageIdx <= 0 ? 'disabled' : '';
+  const nextDisabled = state.activePageIdx >= pages.length - 1 ? 'disabled' : '';
+  html += `<div class="card" style="display:flex;gap:10px;justify-content:space-between;">
+    <button class="btn btn--ghost" data-page-nav="prev" ${prevDisabled}>← Önceki</button>
+    <button class="btn btn--ghost" data-page-nav="next" ${nextDisabled}>Sonraki →</button>
   </div>`;
 
   contentEl.innerHTML = html;
 
+  // Tab durumunu da yenile (status güncel olsun)
+  buildResultTabs();
+
   const calcBtn = contentEl.querySelector('[data-calculate-op]');
-  if (calcBtn) {
-    calcBtn.addEventListener('click', () => calculateOp(op.id));
-  }
+  if (calcBtn) calcBtn.addEventListener('click', () => calculateOp(calcBtn.dataset.calculateOp));
+
+  contentEl.querySelectorAll('[data-page-nav]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const dir = btn.dataset.pageNav;
+      if (dir === 'prev' && state.activePageIdx > 0) state.activePageIdx--;
+      if (dir === 'next' && state.activePageIdx < pages.length - 1) state.activePageIdx++;
+      renderActiveTab();
+      window.scrollTo(0, 0);
+    });
+  });
 
   checkAllDone();
 }
+
+function renderSummaryPage() {
+  const allDone = state.operations.every(o => state.results[o.id]?.valid === true);
+  const operationBlocks = state.operations.map(op => {
+    const r = state.results[op.id];
+    if (!r?.valid) {
+      return `<div class="card" style="border-left:4px solid #f59e0b;">
+        <p class="card__title">${TYPE_LABEL[op.type]}</p>
+        <div class="alert alert--warning">Hesap eksik veya hatalı.</div>
+      </div>`;
+    }
+    const vals = Object.entries(r.results || {}).map(([k, c]) => {
+      if (typeof c?.result !== 'number') return '';
+      const lbl = (RESULT_LABELS[k] || k);
+      return `<div class="summary-row">
+        <span class="summary-row__label">${lbl}</span>
+        <span class="summary-row__val">${c.result.toFixed(2)} mm</span>
+      </div>`;
+    }).join('');
+    return `<div class="card">
+      <p class="card__title">${TYPE_LABEL[op.type]}</p>
+      <div class="summary-list">${vals}</div>
+    </div>`;
+  }).join('');
+
+  return `<div class="card">
+    <p class="card__title">Tüm Sonuçlar</p>
+    <p style="font-size:13px;color:#64748b;">Aşağıdaki sonuçlar PDF olarak kaydedilecek.</p>
+    ${allDone ? '' : '<div class="alert alert--warning">Bazı operasyonlarda eksik hesap var. Lütfen önceki sayfalardan tamamlayın.</div>'}
+  </div>
+  ${operationBlocks}`;
+}
+
+const RESULT_LABELS = {
+  cutterID:           'Cutter ID',
+  c1:                 'C1',
+  c:                  'C — Kesme Mesafesi',
+  couponFree:         'Coupon Free',
+  catchPosition:      'Catch Position',
+  nestingSpace:       'Nesting Space',
+  pilotTemas:         'Lower-in (Pilot Temas)',
+  maxTapping:         'Max Tapping',
+  maxTravel:          'Max Travel',
+  e:                  'E',
+  stoppleOlcusu:      'Total Set (Stopple)',
+  tekerBoruMerkezi:   'Centerline',
+  tekerTemasMesafesi: 'Roller to Bottom',
+  tapalama:           'Total Set (Tapalama)',
+  delmeSuresi:        'Delme Süresi (dk)',
+  geriAlmaToplam:     'Geri Alma — Total Travel',
+};
 
 function renderDataSummary(op) {
   const d = op.data;
@@ -732,36 +833,21 @@ function renderCalcResults(result) {
       <button class="btn btn--primary" data-calculate-op="${state.activeTabId}">Tekrar Hesapla</button>`;
   }
 
-  const RESULT_LABELS = {
-    cutterID:           'Cutter ID',
-    c1:                 'C1',
-    c:                  'C — Kesme Mesafesi',
-    couponFree:         'Coupon Free',
-    catchPosition:      'Catch Position',
-    nestingSpace:       'Nesting Space',
-    pilotTemas:         'Lower-in (Pilot Temas)',
-    maxTapping:         'Max Tapping',
-    maxTravel:          'Max Travel',
-    e:                  'E',
-    stoppleOlcusu:      'Total Set (Stopple)',
-    tekerBoruMerkezi:   'Centerline',
-    tekerTemasMesafesi: 'Roller to Bottom',
-    tapalama:           'Total Set (Tapalama)',
-    delmeSuresi:        'Delme Süresi (dk)',
-    geriAlmaToplam:     'Geri Alma — Total Travel',
-  };
-
   const blocks = Object.entries(result.results || {}).map(([key, calc]) => {
     if (!calc || typeof calc.result !== 'number') return '';
     const val = calc.result.toFixed(3);
     const valInch = mmToInch(calc.result).toFixed(3);
     const stepsHtml = (calc.steps || []).map(s => `<li>${s}</li>`).join('');
     const title = RESULT_LABELS[key] || key;
+    const stepsBlock = stepsHtml ? `<details class="result-steps">
+      <summary>Hesap adımlarını göster</summary>
+      <ul class="steps-list">${stepsHtml}</ul>
+    </details>` : '';
     return `<div class="result-block">
       <div class="result-block__title">${title}</div>
       <div class="result-block__value">${val} <span style="font-size:14px;color:#64748b;">mm</span></div>
       <div class="result-block__value-sub">${valInch}"</div>
-      ${stepsHtml ? `<ul class="steps-list">${stepsHtml}</ul>` : ''}
+      ${stepsBlock}
     </div>`;
   }).join('');
 
