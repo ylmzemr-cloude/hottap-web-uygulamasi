@@ -120,10 +120,14 @@ export async function initTables() {
   // Arka planda Supabase'den güncelle
   fetchFromSupabase()
     .then(({ pipe, cutter, spring }) => {
-      _pipe   = pipe;
-      _cutter = cutter;
+      const dedup = (arr, key) => {
+        const seen = new Set();
+        return arr.filter(r => { if (seen.has(r[key])) return false; seen.add(r[key]); return true; });
+      };
+      _pipe   = dedup(pipe, 'pipe_od_inch');
+      _cutter = dedup(cutter, 'cutter_nominal_inch');
       _spring = spring;
-      saveToLocalStorage(pipe, cutter, spring);
+      saveToLocalStorage(_pipe, _cutter, _spring);
       console.log('Tables: updated from Supabase');
     })
     .catch(() => {
@@ -134,11 +138,23 @@ export async function initTables() {
 // ─── Lookup fonksiyonları ─────────────────────────────────────────────────────
 
 export function getAllPipeData() {
-  return _pipe || STATIC_PIPE;
+  const data = _pipe || STATIC_PIPE;
+  const seen = new Set();
+  return data.filter(r => {
+    if (seen.has(r.pipe_od_inch)) return false;
+    seen.add(r.pipe_od_inch);
+    return true;
+  });
 }
 
 export function getAllCutterData() {
-  return _cutter || STATIC_CUTTER;
+  const data = _cutter || STATIC_CUTTER;
+  const seen = new Set();
+  return data.filter(r => {
+    if (seen.has(r.cutter_nominal_inch)) return false;
+    seen.add(r.cutter_nominal_inch);
+    return true;
+  });
 }
 
 export function getAllSpringData() {

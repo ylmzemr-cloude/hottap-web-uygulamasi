@@ -95,21 +95,27 @@ assert('Teker Temas Mesafesi', ttmResult, eResult + TC1.bMm + TC1.ref2Mm, 0.001)
 const { result: tapResult } = calculateTapalama(TC1.gMm, TC1.hMm, TC1.yMm);
 assert('Tapalama', tapResult, TC1.gMm + TC1.hMm + TC1.yMm, 0.001);
 
-// Delme Süresi = KKM / (TS × 0.125)
+// Delme Süresi = KKM / (TS × advancePerTurn) — T-203 (≤12") için 0.125
 const kkmInch = 2.0;
 const ts = 4;
-const { result: dsResult } = calculateDelmeSuresi(kkmInch, ts);
-assert('Delme Süresi', dsResult, kkmInch / (ts * 0.125), 0.001);
+const advanceT203 = 0.125;
+const { result: dsResult } = calculateDelmeSuresi(kkmInch, ts, advanceT203);
+assert('Delme Süresi (T-203)', dsResult, kkmInch / (ts * advanceT203), 0.001);
 
-// Geri Alma Toplam = Tapalama + M + N
-const { result: gatResult } = calculateGeriAlmaToplam(tapResult, TC1.mMm, TC1.nMm);
-assert('Geri Alma Toplam', gatResult, tapResult + TC1.mMm + TC1.nMm, 0.001);
+// Delme Süresi — 1200 (>12") için 0.004
+const advance1200 = 0.004;
+const { result: dsResult1200 } = calculateDelmeSuresi(kkmInch, ts, advance1200);
+assert('Delme Süresi (1200)', dsResult1200, kkmInch / (ts * advance1200), 0.001);
 
-// Coupon Free = (Pipe OD / 2) - sqrt[(Pipe ID / 2)^2 - (Cutter ID / 2)^2]
-const cutterIdMm = formulas.cutterID(TC1.cutterOdActualMm, TC1.cutterWallMm);
-const { result: cfResult } = calculateCouponFree(TC1.pipeOdMm, TC1.pipeIdMm, cutterIdMm);
-const expectedCF = (TC1.pipeOdMm / 2) - Math.sqrt(
-  Math.pow(TC1.pipeIdMm / 2, 2) - Math.pow(cutterIdMm / 2, 2)
+// Geri Alma Toplam = M + N + Yay
+const springMm = TC1.yMm;
+const { result: gatResult } = calculateGeriAlmaToplam(TC1.mMm, TC1.nMm, springMm);
+assert('Geri Alma Toplam', gatResult, TC1.mMm + TC1.nMm + springMm, 0.001);
+
+// Coupon Free = sqrt[(Pipe OD / 2)^2 - (Cutter OD / 2)^2]
+const { result: cfResult } = calculateCouponFree(TC1.pipeOdMm, TC1.cutterOdActualMm);
+const expectedCF = Math.sqrt(
+  Math.pow(TC1.pipeOdMm / 2, 2) - Math.pow(TC1.cutterOdActualMm / 2, 2)
 );
 assert('Coupon Free', cfResult, expectedCF, 0.001);
 

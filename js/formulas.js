@@ -31,9 +31,9 @@ export const formulas = {
   },
 
   // Coupon Free — Kupon serbest mesafe
-  couponFree: (pipeOdMm, pipeIdMm, cutterIdMm) => {
-    return (pipeOdMm / 2) - Math.sqrt(
-      Math.pow(pipeIdMm / 2, 2) - Math.pow(cutterIdMm / 2, 2)
+  couponFree: (pipeOdMm, cutterOdActualMm) => {
+    return Math.sqrt(
+      Math.pow(pipeOdMm / 2, 2) - Math.pow(cutterOdActualMm / 2, 2)
     );
   },
 
@@ -72,15 +72,14 @@ export const formulas = {
     return gMm + hMm + yOrFMm;
   },
 
-  // Delme Süresi (KKM inch, TS tur sayısı)
-  delmeSuresi: (kkmInch, ts) => {
-    const ADVANCE_PER_TURN = 0.125;
-    return kkmInch / (ts * ADVANCE_PER_TURN);
+  // Delme Süresi (KKM inch, TS tur sayısı, advancePerTurnInch makine tipine göre)
+  delmeSuresi: (kkmInch, ts, advancePerTurnInch) => {
+    return kkmInch / (ts * advancePerTurnInch);
   },
 
   // Geri Alma Toplam
-  geriAlmaToplam: (tapalamaMm, mMm, nMm) => {
-    return tapalamaMm + mMm + nMm;
+  geriAlmaToplam: (mMm, nMm, springTravelMm) => {
+    return mMm + nMm + springTravelMm;
   },
 };
 
@@ -135,18 +134,16 @@ export function calculateE(pipeOdMm, pipeWallMm) {
   return { steps, result };
 }
 
-export function calculateCouponFree(pipeOdMm, pipeIdMm, cutterIdMm) {
+export function calculateCouponFree(pipeOdMm, cutterOdActualMm) {
   const halfPipeOd = pipeOdMm / 2;
-  const halfPipeId = pipeIdMm / 2;
-  const halfCutterId = cutterIdMm / 2;
-  const sqrtInner = Math.sqrt(Math.pow(halfPipeId, 2) - Math.pow(halfCutterId, 2));
-  const result = parseFloat((halfPipeOd - sqrtInner).toFixed(10));
+  const halfCutterOd = cutterOdActualMm / 2;
+  const sqrtInner = Math.sqrt(Math.pow(halfPipeOd, 2) - Math.pow(halfCutterOd, 2));
+  const result = parseFloat(sqrtInner.toFixed(10));
   const steps = [
-    'Formul: Coupon Free = (Pipe OD / 2) - kok[(Pipe ID / 2)^2 - (Cutter ID / 2)^2]',
-    'Adim 1: Coupon Free = (' + pipeOdMm.toFixed(3) + ' / 2) - kok[(' + pipeIdMm.toFixed(3) + ' / 2)^2 - (' + cutterIdMm.toFixed(3) + ' / 2)^2]',
-    'Adim 2: Coupon Free = ' + halfPipeOd.toFixed(3) + ' - kok[' + Math.pow(halfPipeId, 2).toFixed(3) + ' - ' + Math.pow(halfCutterId, 2).toFixed(3) + ']',
-    'Adim 3: Coupon Free = ' + halfPipeOd.toFixed(3) + ' - kok[' + (Math.pow(halfPipeId, 2) - Math.pow(halfCutterId, 2)).toFixed(3) + ']',
-    'Adim 4: Coupon Free = ' + halfPipeOd.toFixed(3) + ' - ' + sqrtInner.toFixed(3),
+    'Formul: Coupon Free = kok[(Pipe OD / 2)^2 - (Cutter OD / 2)^2]',
+    'Adim 1: Coupon Free = kok[(' + pipeOdMm.toFixed(3) + ' / 2)^2 - (' + cutterOdActualMm.toFixed(3) + ' / 2)^2]',
+    'Adim 2: Coupon Free = kok[' + Math.pow(halfPipeOd, 2).toFixed(3) + ' - ' + Math.pow(halfCutterOd, 2).toFixed(3) + ']',
+    'Adim 3: Coupon Free = kok[' + (Math.pow(halfPipeOd, 2) - Math.pow(halfCutterOd, 2)).toFixed(3) + ']',
     'Sonuc: Coupon Free = ' + result.toFixed(3) + ' mm  (' + mmToInch(result).toFixed(3) + '")'
   ];
   return { steps, result };
@@ -229,23 +226,22 @@ export function calculateTapalama(gMm, hMm, yOrFMm, yOrFLabel) {
   return { steps, result };
 }
 
-export function calculateDelmeSuresi(kkmInch, ts) {
-  const ADVANCE = 0.125;
-  const result = parseFloat(formulas.delmeSuresi(kkmInch, ts).toFixed(10));
+export function calculateDelmeSuresi(kkmInch, ts, advancePerTurnInch) {
+  const result = parseFloat(formulas.delmeSuresi(kkmInch, ts, advancePerTurnInch).toFixed(10));
   const steps = [
-    'Formul: Delme Suresi = KKM / (TS x 0.125)',
-    'Adim 1: Delme Suresi = ' + kkmInch.toFixed(3) + '" / (' + ts + ' x ' + ADVANCE + ')',
-    'Adim 2: Delme Suresi = ' + kkmInch.toFixed(3) + ' / ' + (ts * ADVANCE).toFixed(3),
-    'Sonuc: Delme Suresi = ' + result.toFixed(3) + ' tur'
+    'Formul: Delme Suresi = KKM / (TS x Ilerleme)',
+    'Adim 1: Delme Suresi = ' + kkmInch.toFixed(3) + '" / (' + ts + ' x ' + advancePerTurnInch + ')',
+    'Adim 2: Delme Suresi = ' + kkmInch.toFixed(3) + ' / ' + (ts * advancePerTurnInch).toFixed(4),
+    'Sonuc: Delme Suresi = ' + result.toFixed(3) + ' dakika'
   ];
   return { steps, result };
 }
 
-export function calculateGeriAlmaToplam(tapalamaMm, mMm, nMm) {
-  const result = parseFloat(formulas.geriAlmaToplam(tapalamaMm, mMm, nMm).toFixed(10));
+export function calculateGeriAlmaToplam(mMm, nMm, springTravelMm) {
+  const result = parseFloat(formulas.geriAlmaToplam(mMm, nMm, springTravelMm).toFixed(10));
   const steps = [
-    'Formul: Geri Alma Toplam = Tapalama + M + N',
-    'Adim 1: Geri Alma Toplam = ' + tapalamaMm.toFixed(3) + ' + ' + mMm.toFixed(3) + ' + ' + nMm.toFixed(3),
+    'Formul: Geri Alma Toplam = M + N + Yay',
+    'Adim 1: Geri Alma Toplam = ' + mMm.toFixed(3) + ' + ' + nMm.toFixed(3) + ' + ' + springTravelMm.toFixed(3),
     'Sonuc: Geri Alma Toplam = ' + result.toFixed(3) + ' mm  (' + mmToInch(result).toFixed(3) + '")'
   ];
   return { steps, result };

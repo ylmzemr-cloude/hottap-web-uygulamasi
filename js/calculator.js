@@ -50,7 +50,7 @@ export function runHotTap(p) {
   const cutterID    = calculateCutterID(p.cutterOdActualMm, p.cutterWallMm);
   const c1          = calculateC1(p.pipeOdMm, p.pipeIdMm, p.cutterOdActualMm);
   const c           = calculateC(c1.result, p.ref1Mm);
-  const couponFree  = calculateCouponFree(p.pipeOdMm, p.pipeIdMm, cutterID.result);
+  const couponFree  = calculateCouponFree(p.pipeOdMm, p.cutterOdActualMm);
   const pilotTemas  = calculatePilotTemas(p.aMm, p.bMm);
   const maxTapping  = calculateMaxTapping(p.pipeOdMm, p.ref1Mm);
   const maxTravel   = calculateMaxTravel(p.aMm, p.bMm, p.pipeOdMm, p.ref1Mm);
@@ -160,7 +160,8 @@ export function runKKM(p) {
     };
   }
 
-  const delmeSuresi = calculateDelmeSuresi(p.kkmInch, p.ts);
+  const advancePerTurnInch = p.pipeOdNominalInch <= 12 ? 0.125 : 0.004;
+  const delmeSuresi = calculateDelmeSuresi(p.kkmInch, p.ts, advancePerTurnInch);
   return { valid: true, errors: {}, results: { delmeSuresi } };
 }
 
@@ -170,16 +171,16 @@ export function runKKM(p) {
  * Geri alma toplam mesafesini hesaplar.
  *
  * @param {object} p
- * @param {number} p.tapalamaMm - Tapalama sonucu
- * @param {number} p.mMm        - M ölçüsü
- * @param {number} p.nMm        - N ölçüsü
+ * @param {number} p.mMm             - M ölçüsü
+ * @param {number} p.nMm             - N ölçüsü
+ * @param {number} p.springTravelMm  - Yay ilerlemesi (tablodan veya kullanıcı girişi)
  */
 export function runGeriAlma(p) {
-  if (p.tapalamaMm === undefined || p.mMm === undefined || p.nMm === undefined) {
-    return { valid: false, errors: { general: 'Tapalama, M ve N degerleri zorunludur.' }, results: null };
+  if (p.mMm === undefined || p.nMm === undefined || p.springTravelMm === undefined) {
+    return { valid: false, errors: { general: 'M, N ve Yay degerleri zorunludur.' }, results: null };
   }
 
-  const geriAlmaToplam = calculateGeriAlmaToplam(p.tapalamaMm, p.mMm, p.nMm);
+  const geriAlmaToplam = calculateGeriAlmaToplam(p.mMm, p.nMm, p.springTravelMm);
   return { valid: true, errors: {}, results: { geriAlmaToplam } };
 }
 
