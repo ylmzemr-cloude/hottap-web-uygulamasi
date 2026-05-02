@@ -6,6 +6,7 @@ import { runHotTap, runStopple, runTapalama, runKKM, runGeriAlma, toMm } from '.
 import { calculateDelmeSuresi } from './formulas.js';
 import { inchToMm, mmToInch } from './units.js';
 import { supabase } from './supabase.js';
+import { loadVisibility, getVisibility, saveVisibility, VISIBILITY_DEFS } from './settings.js';
 import { generatePDF } from './pdf.js';
 import { initOffline, addPending, updateConnectionStatus } from './offline.js';
 
@@ -50,6 +51,8 @@ async function init() {
   setupMessageForm();
   setupOpSure();
   setupHistory();
+  setupVisibilitySettings();
+  await loadVisibility();
   showView('new-calc');
 }
 
@@ -694,7 +697,7 @@ function renderActiveTab() {
     html = `<div class="card">
       <p class="card__title">${TYPE_LABEL[op.type]}</p>
       ${renderDataSummary(op)}
-      ${result ? renderCalcResults(result) : `
+      ${result ? renderCalcResults(result, op.type) : `
         <button class="btn btn--primary" data-calculate-op="${op.id}">Hesapla</button>
       `}
     </div>`;
@@ -783,37 +786,40 @@ const RESULT_LABELS = {
 function renderDataSummary(op) {
   const d = op.data;
   const rows = [];
+  const isAdmin = currentUser?.profile?.rol === 'admin';
+  const allowed = isAdmin ? null : (getVisibility()[op.type]?.summary || []);
+  const show = (key) => isAdmin || allowed.includes(key);
 
   if (op.type === 'hottap') {
-    if (d.pipeOdNominalInch) rows.push(['Pipe OD', d.pipeOdNominalInch + '"  (' + (d.pipeOdMm ?? '—') + ' mm)']);
-    if (d.cutterOdNominalInch) rows.push(['Cutter OD', d.cutterOdNominalInch + '"  (' + (d.cutterOdActualMm ?? '—') + ' mm actual)']);
-    if (d.cutterWallMm != null) rows.push(['Cutter Et', d.cutterWallMm.toFixed(3) + ' mm']);
-    if (d.aMm != null) rows.push(['A', d.aMm.toFixed(3) + ' mm  (' + mmToInch(d.aMm).toFixed(3) + '")']);
-    if (d.bMm != null) rows.push(['B', d.bMm.toFixed(3) + ' mm  (' + mmToInch(d.bMm).toFixed(3) + '")']);
-    if (d.ref1Mm != null) rows.push(['Ref1', d.ref1Mm.toFixed(3) + ' mm  (' + mmToInch(d.ref1Mm).toFixed(3) + '")']);
+    if (show('pipeOd') && d.pipeOdNominalInch) rows.push(['Pipe OD', d.pipeOdNominalInch + '"  (' + (d.pipeOdMm ?? '—') + ' mm)']);
+    if (show('cutterOd') && d.cutterOdNominalInch) rows.push(['Cutter OD', d.cutterOdNominalInch + '"  (' + (d.cutterOdActualMm ?? '—') + ' mm actual)']);
+    if (show('cutterWall') && d.cutterWallMm != null) rows.push(['Cutter Et', d.cutterWallMm.toFixed(3) + ' mm']);
+    if (show('a') && d.aMm != null) rows.push(['A', d.aMm.toFixed(3) + ' mm  (' + mmToInch(d.aMm).toFixed(3) + '")']);
+    if (show('b') && d.bMm != null) rows.push(['B', d.bMm.toFixed(3) + ' mm  (' + mmToInch(d.bMm).toFixed(3) + '")']);
+    if (show('ref1') && d.ref1Mm != null) rows.push(['Ref1', d.ref1Mm.toFixed(3) + ' mm  (' + mmToInch(d.ref1Mm).toFixed(3) + '")']);
   }
 
   if (op.type === 'stopple') {
     const linked = state.operations.find(o => o.id === d.linkedHottapId);
-    if (linked) rows.push(['Bağlı HotTap', 'HotTap #' + linked.index]);
-    if (d.pipeOdNominalInch) rows.push(['Pipe OD', d.pipeOdNominalInch + '"']);
-    if (d.dMm != null) rows.push(['D', d.dMm.toFixed(3) + ' mm']);
-    if (d.ref2Mm != null) rows.push(['Ref2', d.ref2Mm.toFixed(3) + ' mm']);
+    if (show('linkedHottap') && linked) rows.push(['Bağlı HotTap', 'HotTap #' + linked.index]);
+    if (show('pipeOd') && d.pipeOdNominalInch) rows.push(['Pipe OD', d.pipeOdNominalInch + '"']);
+    if (show('d') && d.dMm != null) rows.push(['D', d.dMm.toFixed(3) + ' mm']);
+    if (show('ref2') && d.ref2Mm != null) rows.push(['Ref2', d.ref2Mm.toFixed(3) + ' mm']);
   }
 
   if (op.type === 'tapalama') {
-    if (d.cutterOdNominalInch) rows.push(['Cutter OD', d.cutterOdNominalInch + '"']);
-    if (d.gMm != null) rows.push(['G', d.gMm.toFixed(3) + ' mm']);
-    if (d.hMm != null) rows.push(['H', d.hMm.toFixed(3) + ' mm']);
-    if (d.springTravelMm != null) rows.push(['Y (yay)', d.springTravelMm.toFixed(3) + ' mm']);
-    if (d.fMm != null) rows.push(['F', d.fMm.toFixed(3) + ' mm']);
+    if (show('cutterOd') && d.cutterOdNominalInch) rows.push(['Cutter OD', d.cutterOdNominalInch + '"']);
+    if (show('g') && d.gMm != null) rows.push(['G', d.gMm.toFixed(3) + ' mm']);
+    if (show('h') && d.hMm != null) rows.push(['H', d.hMm.toFixed(3) + ' mm']);
+    if (show('y') && d.springTravelMm != null) rows.push(['Y (yay)', d.springTravelMm.toFixed(3) + ' mm']);
+    if (show('f') && d.fMm != null) rows.push(['F', d.fMm.toFixed(3) + ' mm']);
   }
 
   if (op.type === 'geri-alma') {
-    if (d.cutterOdNominalInch) rows.push(['Cutter OD', d.cutterOdNominalInch + '"']);
-    if (d.mMm != null) rows.push(['M', d.mMm.toFixed(3) + ' mm']);
-    if (d.nMm != null) rows.push(['N', d.nMm.toFixed(3) + ' mm']);
-    if (d.springTravelMm != null) rows.push(['Yay', d.springTravelMm.toFixed(3) + ' mm']);
+    if (show('cutterOd') && d.cutterOdNominalInch) rows.push(['Cutter OD', d.cutterOdNominalInch + '"']);
+    if (show('m') && d.mMm != null) rows.push(['M', d.mMm.toFixed(3) + ' mm']);
+    if (show('n') && d.nMm != null) rows.push(['N', d.nMm.toFixed(3) + ' mm']);
+    if (show('yay') && d.springTravelMm != null) rows.push(['Yay', d.springTravelMm.toFixed(3) + ' mm']);
   }
 
   if (!rows.length) return '';
@@ -826,15 +832,19 @@ function renderDataSummary(op) {
   </div>`;
 }
 
-function renderCalcResults(result) {
+function renderCalcResults(result, opType) {
   if (!result.valid) {
     const errList = Object.values(result.errors || {}).filter(Boolean).join(', ');
     return `<div class="alert alert--error">Hata: ${errList || 'Eksik veya hatalı veri.'}</div>
       <button class="btn btn--primary" data-calculate-op="${state.activeTabId}">Tekrar Hesapla</button>`;
   }
 
+  const isAdmin = currentUser?.profile?.rol === 'admin';
+  const allowed = isAdmin ? null : (getVisibility()[opType]?.results || []);
+
   const blocks = Object.entries(result.results || {}).map(([key, calc]) => {
     if (!calc || typeof calc.result !== 'number') return '';
+    if (!isAdmin && allowed && !allowed.includes(key)) return '';
     const val = calc.result.toFixed(3);
     const valInch = mmToInch(calc.result).toFixed(3);
     const stepsHtml = (calc.steps || []).map(s => `<li>${s}</li>`).join('');
@@ -1175,6 +1185,82 @@ async function downloadPdfFromStorage(pdfPath) {
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
+}
+
+// ─── Görünüm Ayarları (Admin) ─────────────────────────────────────────────────
+
+function setupVisibilitySettings() {
+  const nav = document.querySelector('.nav-btn[data-view="admin-visibility"]');
+  if (!nav) return;
+
+  nav.addEventListener('click', renderVisibilityForm);
+}
+
+function renderVisibilityForm() {
+  const formEl = document.getElementById('visibilityForm');
+  if (!formEl) return;
+
+  const vis = getVisibility();
+
+  formEl.innerHTML = Object.entries(VISIBILITY_DEFS).map(([opType, def]) => {
+    const opVis = vis[opType] || { summary: [], results: [] };
+
+    const summaryRows = def.summary.map(f => `
+      <label style="display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;">
+        <input type="checkbox" data-op="${opType}" data-section="summary" data-key="${f.key}"
+          ${opVis.summary.includes(f.key) ? 'checked' : ''}
+          style="width:16px;height:16px;cursor:pointer;">
+        <span style="font-size:13px;">${f.label}</span>
+      </label>`).join('');
+
+    const resultsRows = def.results.map(f => `
+      <label style="display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;">
+        <input type="checkbox" data-op="${opType}" data-section="results" data-key="${f.key}"
+          ${opVis.results.includes(f.key) ? 'checked' : ''}
+          style="width:16px;height:16px;cursor:pointer;">
+        <span style="font-size:13px;">${f.label}</span>
+      </label>`).join('');
+
+    return `
+      <div style="margin-bottom:24px;">
+        <div style="font-weight:700;font-size:15px;margin-bottom:12px;padding-bottom:6px;border-bottom:2px solid #e2e8f0;">
+          ${def.label}
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 32px;">
+          <div>
+            <div style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Giriş Özeti</div>
+            ${summaryRows}
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Hesaplama Sonuçları</div>
+            ${resultsRows}
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+
+  document.getElementById('btnSaveVisibility').onclick = saveVisibilityFromForm;
+  document.getElementById('visibilitySaveMsg').style.display = 'none';
+}
+
+async function saveVisibilityFromForm() {
+  const newVis = {};
+  document.querySelectorAll('#visibilityForm input[type=checkbox]').forEach(cb => {
+    const { op, section, key } = cb.dataset;
+    if (!newVis[op]) newVis[op] = { summary: [], results: [] };
+    if (cb.checked) newVis[op][section].push(key);
+  });
+
+  const btn = document.getElementById('btnSaveVisibility');
+  btn.disabled = true;
+  const ok = await saveVisibility(newVis);
+  btn.disabled = false;
+
+  const msg = document.getElementById('visibilitySaveMsg');
+  msg.textContent = ok ? 'Kaydedildi.' : 'Kayıt başarısız.';
+  msg.style.color = ok ? '#16a34a' : '#dc2626';
+  msg.style.display = 'inline';
+  setTimeout(() => { msg.style.display = 'none'; }, 3000);
 }
 
 // ─── Yöneticiye Mesaj ─────────────────────────────────────────────────────────

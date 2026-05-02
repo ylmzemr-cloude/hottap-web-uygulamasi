@@ -45,6 +45,7 @@
     <button class="nav-btn hidden admin-only" data-view="admin-users">Kullanıcılar</button>
     <button class="nav-btn hidden admin-only" data-view="admin-calcs">Hesaplamalar</button>
     <button class="nav-btn hidden admin-only" data-view="admin-tables">Tablolar</button>
+    <button class="nav-btn hidden admin-only" data-view="admin-visibility">Görünüm</button>
   </nav>
 
   <!-- ─── Ana İçerik ────────────────────────────────────────────── -->
@@ -263,6 +264,22 @@
           Boru, cutter ve yay tablolarını buradan düzenleyebilirsiniz.
         </p>
         <div id="tablesContent"></div>
+      </div>
+    </div>
+
+    <!-- ═══ ADMİN — GÖRÜNÜM AYARLARI ══════════════════════════════════ -->
+    <div id="view-admin-visibility" class="view">
+      <div class="card">
+        <p class="card__title">Sonuç Görünüm Ayarları</p>
+        <p style="font-size:13px;color:#64748b;margin-bottom:20px;line-height:1.5;">
+          Kullanıcıların sonuç ekranında hangi verileri göreceğini seçin.<br>
+          <strong>Admin her zaman tüm verileri görür</strong> — bu ayar yalnızca diğer kullanıcıları etkiler.
+        </p>
+        <div id="visibilityForm"></div>
+        <div style="margin-top:20px;display:flex;gap:10px;align-items:center;">
+          <button class="btn btn--primary" id="btnSaveVisibility">Kaydet</button>
+          <span id="visibilitySaveMsg" style="font-size:13px;color:#16a34a;display:none;">Kaydedildi.</span>
+        </div>
       </div>
     </div>
 
