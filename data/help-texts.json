@@ -36,49 +36,49 @@
   },
   "A": {
     "title": "A — Pilot Ucundan Adaptör Yüzeyine",
-    "text": "Pilot drill ucundan tapping machine adaptörünün yüzeyine kadar olan mesafe.",
+    "text": "Hot Tap operasyonunda A ölçüsü, delme makinesinin mili tamamen geri çekilmiş durumdayken pilot matkap ucunun ucu ile makine adaptör flanş yüzeyi arasındaki mesafeyi ifade eder. Bu teknik veri, delme işlemi başlamadan önce kesicinin boruya kadar katettiği boşluk miktarını belirleyen \"indirme mesafesinin\" (lower-in distance) doğru şekilde hesaplanması için kullanılır.",
     "unit": "mm veya inç",
     "note": "Pozitif değer girilir.",
     "image": "olcu_A.png"
   },
   "B": {
     "title": "B — Adaptör Yüzeyinden Vana Alt Yüzeyine",
-    "text": "Tapping machine adaptörünün yüzeyinden boru üzerindeki vanın alt yüzeyine kadar olan mesafe.",
+    "text": "Hot Tap operasyonunda B ölçüsü, tapping vanasının üst yüzeyinden (conta dahil), delinecek olan ana borunun sırtına (en üst noktasına) kadar olan toplam dikey mesafeyi ifade eder. Bu teknik ölçüm, kesicinin boruya temas edene kadar boşlukta katettiği \"indirme mesafesinin\" (lower-in distance) hesaplanması için A ölçüsü ile toplanarak kullanılır.",
     "unit": "mm veya inç",
     "note": "Pozitif değer girilir.",
     "image": "olcu_B.png"
   },
   "Ref1": {
     "title": "Ref1 — Pilot Ucundan Cutter Kesme Yüzeyine",
-    "text": "Pilot drill ucundan cutter kesme yüzeyine kadar olan referans mesafe. Makine tipine göre negatif olabilir.",
+    "text": "Hot Tap operasyonunda Ref1, dairesel kesicinin dişleri ile pilot matkabın uç noktası arasındaki dikey mesafe farkını temsil eden kritik bir referans ölçüsüdür. Bu teknik değer, pilotun boruya temasından itibaren kesicinin boru duvarını tamamen temizlemesi için gereken toplam delme mesafesinin (C) hesaplanmasında $C = C1 + Ref1$ formülüyle temel bir bileşen olarak kullanılır.",
     "unit": "mm veya inç",
     "note": "Negatif değer alabilir — eksi işaretiyle giriniz.",
     "image": "olcu_Ref1.png"
   },
   "D": {
     "title": "D — Stopple Referans Ölçüsü",
-    "text": "Stopple operasyonunda tapping machine adaptörünün yüzeyinden stopple mekanizmasına kadar olan referans mesafe.",
+    "text": "Stopple operasyonunda D ölçüsü, tıkama makinesinin mili (control bar) tamamen geri çekilmiş durumdayken, makine gövde flanş yüzeyi ile milin en alt ucu (control bar head) arasındaki dikey ofset mesafesini ifade eder. Bu sabit teknik değer, tıkama kafasının boru içerisinde sızdırmazlık sağlayacağı nihai konuma ulaşması için gereken \"Toplam Set\" (Total Set) mesafesinin hesaplanmasında $D + B + E$ formülünün temel bir bileşeni olarak kullanılır",
     "unit": "mm veya inç",
     "note": "Pozitif değer girilir.",
     "image": "olcu_D.png"
   },
   "Ref2": {
     "title": "Ref2 — Stopple Teker Referansı",
-    "text": "Teker (wheel) konumu için kullanılan referans ölçüsü. Makine tipine göre negatif olabilir.",
+    "text": "Stopple operasyonunda Ref2, sızdırmazlık elemanı takılı ve tıkama kafası tamamen geri çekilmiş durumdayken kafadaki tekerlek (roller) ile makine gövde flanş yüzeyi arasındaki dikey ofset mesafesini ifade eder. Bu teknik değer, tıkama kafasının boru eksenine tam hizalanması (Centerline) ve süpürme işlemi için boru taban noktasının (Roller to Bottom) doğru hesaplanmasında temel bileşen olarak kullanılır.",
     "unit": "mm veya inç",
     "note": "Negatif değer alabilir — eksi işaretiyle giriniz.",
     "image": "olcu_Ref2.png"
   },
   "G": {
     "title": "G — Tapalama Referans Ölçüsü 1",
-    "text": "Tamamlama (tapalama) operasyonunda ilk referans mesafe.",
+    "text": "Tapalama operasyonunda G ölçüsü, makine mili tamamen geri çekilmiş durumdayken tapanın en alt yüzeyi ile makine adaptör flanş yüzeyi arasındaki dikey ofset mesafesini ifade eder. Bu teknik değer, tapanın fitting içindeki kilit segmentlerine tam olarak hizalanmasını sağlayan \"Tapalama Set\" (Total Set) mesafesinin hesaplanmasında temel bir veri olarak kullanılır.",
     "unit": "mm veya inç",
     "note": "Pozitif değer girilir.",
     "image": "olcu_G.png"
   },
   "H": {
     "title": "H — Tapalama Referans Ölçüsü 2",
-    "text": "Tamamlama (tapalama) operasyonunda ikinci referans mesafe.",
+    "text": "Tapalama (Completion Plug Setting) operasyonunda H ölçüsü, tapping vanasının üst yüzeyinden (conta dahil), fitting içerisindeki oturtma omzuna (seating shoulder) veya kilit segmentlerinin üstüne kadar olan dikey mesafeyi temsil eder. Bu teknik saha ölçümü, tapanın fitting içindeki kilit mekanizmasıyla tam olarak hizalanmasını sağlayan \"Toplam Set\" (Total Set) mesafesinin hesaplanmasında kullanılan temel verilerden biridir.",
     "unit": "mm veya inç",
     "note": "Pozitif değer girilir.",
     "image": "olcu_H.png"
@@ -92,7 +92,7 @@
   },
   "F": {
     "title": "F — Tapalama Ek Ölçüsü (12 inç üzeri)",
-    "text": "12 inç üzeri cutter boyutlarında yay baskısı yerine kullanılan ek ölçü. Kullanıcı tarafından girilir.",
+    "text": "Tapalama (LOCK-O-RING®) operasyonunda F ölçüsü, tapanın en alt yüzeyinden üzerindeki kilitleme kanalının (groove) üst kenarına kadar olan dikey sabit mesafeyi ifade eder. 12 inç ve üzeri büyük çaplı operasyonlarda (1200 serisi) kullanılan bu ölçü, tapanın fitting içindeki kilit segmentlerine tam olarak hizalanmasını sağlamak için hesaplama formülünde yay ilerlemesi yerine bir geometrik bileşen olarak yer alır.",
     "unit": "mm veya inç",
     "note": "Sadece 12 inç üzeri cutter için görünür.",
     "image": "olcu_F.png"
@@ -113,16 +113,30 @@
   },
   "M": {
     "title": "M — Vana Üstünden Tapa Tutucu Alt Yüzüne",
-    "text": "Geri alma operasyonunda vanın üst yüzeyinden tapa tutucunun alt yüzeyine (tam geri çekilmiş konumda) olan mesafe.",
+    "text": "Tapa geri alma (re-entry) operasyonunda M ölçüsü, delme makinesinin mili tamamen geri çekilmiş durumdayken tapping vanasının üst yüzeyinden tapa tutucunun (plug holder) en alt ucuna kadar olan dikey mesafeyi ifade eder,,. Bu teknik veri, hattan geri alınacak tapanın üzerindeki kare yuvaya (recess) tam olarak ulaşmak için gereken toplam ilerleme mesafesinin ($M + N + \\text{Yay}$) hesaplanmasında temel bir ofset değeri olarak kullanılır,,.",
     "unit": "mm veya inç",
     "note": "Geri alma hesabı opsiyoneldir.",
     "image": "olcu_M.png"
   },
   "N": {
     "title": "N — Vana Üstünden Tamamlama Tapası Yuvasına",
-    "text": "Geri alma operasyonunda vanın üst yüzeyinden tamamlama tapasının yuvasının alt yüzeyine olan mesafe.",
+    "text": "Tapa geri alma (re-entry) operasyonunda N ölçüsü, tapping vanasının üst yüzeyinden, boru hattı içindeki tapanın üzerinde bulunan kare yuvanın (recess) dibine kadar olan dikey mesafeyi ifade eder. Bu ölçüm, tapa tutucunun (plug holder) tapanın üzerindeki yuvaya tam olarak ulaşmasını ve kavramasını sağlayan toplam ilerleme mesafesinin ($M + N + \\text{Yay}$) hesaplanmasında temel bir veri olarak kullanılır.",
     "unit": "mm veya inç",
     "note": "Geri alma hesabı opsiyoneldir.",
     "image": "olcu_N.png"
+  },
+  "CatchPosition": {
+    "title": "Catch Position — U-Teli Pozisyon Kontrolü",
+    "text": "HotTap operasyonunda Catch Position (Yakalama Pozisyonu), pilot matkap üzerindeki U-tellerinin (U-rods) kesilen boru parçasını (kupon) fiziksel olarak kavradığı dikey derinlik seviyesini ifade eder. Bu pozisyonun kontrolü, kuponun ana boru hattı içine düşmesini engellemek için TDW standartlarına göre en az iki U-telinin kupon serbest kalmadan (coupon free) önce kuponu yakaladığından emin olmak açısından hayati önem taşır.",
+    "unit": "mm  (' ile inç gösterilir)",
+    "note": "Hesap sonucu — kullanıcı girmez.",
+    "image": ""
+  },
+  "NestingSpace": {
+    "title": "Nesting Space — Kupon Yerleşme Alanı",
+    "text": "HotTap operasyonunda Nesting Space (Yerleşme Alanı), kesim işlemi tamamlanıp ekipman geri çekildiğinde; kesici, pilot matkap ve kuponun vana diskinin kapanmasını engellemeden vana gövdesi içinde güvenli bir şekilde durabileceği dikey boşluğu ifade eder. Bu alanın yeterliliğini sağlamak için, kuponun en alt noktasından itibaren minimum bir inç (1.000\") ek güvenlik mesafesi (Required Nesting Dimension) bırakılmalı ve bu toplam boyutun vananın sağladığı fiziksel alandan küçük olduğu doğrulanmalıdır.",
+    "unit": "mm  (' ile inç gösterilir)",
+    "note": "Hesap sonucu — kullanıcı girmez.",
+    "image": ""
   }
 }
