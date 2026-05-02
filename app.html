@@ -282,6 +282,24 @@
     <div class="help-popup__meta" id="helpPopupMeta"></div>
   </div>
 
+  <!-- ─── Revize Modal ───────────────────────────────────────── -->
+  <div class="popup-overlay hidden" id="revizeOverlay"></div>
+  <div class="help-popup hidden" id="revizeModal" role="dialog" aria-modal="true" aria-labelledby="revizeModalTitle" style="max-width:360px;">
+    <div class="help-popup__header">
+      <h3 id="revizeModalTitle">Revize Et</h3>
+      <button class="help-popup__close" id="btnRevizeIptal" aria-label="Kapat">×</button>
+    </div>
+    <div class="help-popup__text" style="padding:16px;">
+      <p style="margin-bottom:12px;font-size:13px;color:#475569;">Bu hesaplamayı yeni revize olarak kaydetmek üzeresiniz. Değişiklikleri yapar, sonra "Kaydet" butonuna basarsınız.</p>
+      <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">Revize Açıklaması <span style="font-weight:400;color:#94a3b8;">(isteğe bağlı)</span></label>
+      <textarea id="revizeAciklamaInput" rows="3" placeholder="Örn: Boru çapı güncellendi..." style="width:100%;border:1px solid #e2e8f0;border-radius:6px;padding:8px;font-size:13px;resize:vertical;"></textarea>
+      <div style="display:flex;gap:8px;margin-top:14px;">
+        <button class="btn btn--primary" id="btnRevizeOnayla" style="flex:1;">Devam Et</button>
+        <button class="btn" id="btnRevizeIptalAlt" style="flex:1;">İptal</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ─── Toast Konteyneri ─────────────────────────────────────── -->
   <div class="toast-container" id="toastContainer"></div>
 

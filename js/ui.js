@@ -23,6 +23,7 @@ const state = {
   activePageIdx: 0,     // current page numerical index
   results: {},      // { opId: { valid, results, errors } }
   images: {},       // { opId: [{ file, url, name }] }
+  editingCalc: null,  // { id, parent_id, revize_no } — düzenleme modunda
 };
 
 const MAX_IMAGES = 5;
@@ -48,6 +49,7 @@ async function init() {
   setupHelpPopup();
   setupMessageForm();
   setupOpSure();
+  setupHistory();
   showView('new-calc');
 }
 
@@ -921,7 +923,14 @@ async function saveCalculation() {
       konum_lng,
     };
 
+    if (state.editingCalc) {
+      calcPayload.parent_id       = state.editingCalc.parent_id;
+      calcPayload.revize_no       = state.editingCalc.revize_no;
+      calcPayload.revize_aciklama = state.editingCalc.revize_aciklama || null;
+    }
+
     let savedToServer = false;
+    let savedCalcId   = null;
 
     if (navigator.onLine) {
       const { data: calc, error } = await supabase
@@ -929,6 +938,7 @@ async function saveCalculation() {
 
       if (!error) {
         savedToServer = true;
+        savedCalcId   = calc.id;
 
         // Demo hak düşür
         if (currentUser.profile.rol === 'demo') {
@@ -961,15 +971,39 @@ async function saveCalculation() {
       showToast('Çevrimdışısınız. Bağlantı sağlandığında otomatik gönderilecek.', 'warning');
     }
 
-    // PDF her durumda indir
-    await generatePDF({
-      projeNo:         state.projeNo,
-      operasyonTarihi: state.operasyonTarihi,
-      kullanici:       currentUser.profile.ad_soyad,
-      operations:      state.operations,
-      results:         state.results,
-      images:          imageUrls,
+    // PDF üret (indir + blob al)
+    const revizeNo = state.editingCalc?.revize_no || 1;
+    const pdfBlob = await generatePDF({
+      projeNo:          state.projeNo,
+      operasyonTarihi:  state.operasyonTarihi,
+      kullanici:        currentUser.profile.ad_soyad,
+      operations:       state.operations,
+      results:          state.results,
+      images:           imageUrls,
+      revize_no:        revizeNo,
+      revize_aciklama:  state.editingCalc?.revize_aciklama,
     });
+
+    // PDF'i Storage'a yükle
+    if (savedCalcId && navigator.onLine && pdfBlob) {
+      try {
+        const pdfPath = `${currentUser.id}/${savedCalcId}_v${revizeNo}.pdf`;
+        const { error: stErr } = await supabase.storage
+          .from('pdfs')
+          .upload(pdfPath, pdfBlob, { contentType: 'application/pdf', upsert: true });
+        if (!stErr) {
+          await supabase.from('calculations')
+            .update({ pdf_storage_path: pdfPath })
+            .eq('id', savedCalcId);
+        }
+      } catch (e) {
+        console.error('PDF storage upload error', e);
+      }
+    }
+
+    // Revize modunu sıfırla
+    state.editingCalc = null;
+    document.getElementById('btnSaveCalc').textContent = 'Kaydet ve PDF İndir';
 
     if (savedToServer) {
       showToast('Hesaplama kaydedildi ve PDF indirildi!', 'success');
@@ -995,7 +1029,7 @@ async function loadHistory() {
 
   const { data, error } = await supabase
     .from('calculations')
-    .select('id, proje_no, operasyon_tarihi, sistem_kayit_zamani')
+    .select('id, proje_no, operasyon_tarihi, sistem_kayit_zamani, revize_no, parent_id, pdf_storage_path')
     .eq('user_id', currentUser.id)
     .order('sistem_kayit_zamani', { ascending: false })
     .limit(50);
@@ -1008,15 +1042,124 @@ async function loadHistory() {
     return;
   }
 
-  listEl.innerHTML = data.map(c => `
-    <div class="history-item">
-      <div class="history-item__info">
-        <div class="history-item__title">${c.proje_no || '—'}</div>
+  listEl.innerHTML = data.map(c => {
+    const revNo = c.revize_no || 1;
+    const revBadge = revNo > 1 ? ` <span style="display:inline-block;background:#dc2626;color:#fff;font-size:10px;padding:1px 5px;border-radius:4px;vertical-align:middle;">R${revNo}</span>` : '';
+    const pdfBtn = c.pdf_storage_path
+      ? `<button class="btn btn--sm" data-dl-pdf="${c.id}" data-pdf-path="${c.pdf_storage_path}" style="font-size:11px;padding:4px 8px;">PDF</button>`
+      : '';
+    return `
+    <div class="history-item" style="align-items:center;">
+      <div class="history-item__info" style="flex:1;">
+        <div class="history-item__title">${c.proje_no || '—'}${revBadge}</div>
         <div class="history-item__sub">${c.operasyon_tarihi || ''} &nbsp;·&nbsp; ${new Date(c.sistem_kayit_zamani).toLocaleDateString('tr-TR')}</div>
       </div>
-      <span class="history-item__arrow">›</span>
-    </div>
-  `).join('');
+      <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">
+        ${pdfBtn}
+        <button class="btn btn--sm btn--primary" data-revize="${c.id}" data-revize-no="${revNo}" style="font-size:11px;padding:4px 8px;">Revize Et</button>
+      </div>
+    </div>`;
+  }).join('');
+
+}
+
+function setupHistory() {
+  document.getElementById('historyList').addEventListener('click', e => {
+    const revBtn = e.target.closest('[data-revize]');
+    if (revBtn) {
+      showRevizeModal(revBtn.dataset.revize, parseInt(revBtn.dataset.revizeNo));
+      return;
+    }
+    const dlBtn = e.target.closest('[data-dl-pdf]');
+    if (dlBtn) downloadPdfFromStorage(dlBtn.dataset.pdfPath);
+  });
+}
+
+// ─── Revize ───────────────────────────────────────────────────────────────────
+
+function showRevizeModal(calcId, currentRevizeNo) {
+  const overlay = document.getElementById('revizeOverlay');
+  const modal   = document.getElementById('revizeModal');
+  document.getElementById('revizeAciklamaInput').value = '';
+  overlay.classList.remove('hidden');
+  modal.classList.remove('hidden');
+
+  const close = () => {
+    overlay.classList.add('hidden');
+    modal.classList.add('hidden');
+  };
+
+  document.getElementById('btnRevizeIptal').onclick    = close;
+  document.getElementById('btnRevizeIptalAlt').onclick = close;
+  overlay.onclick = close;
+
+  document.getElementById('btnRevizeOnayla').onclick = async () => {
+    const aciklama = document.getElementById('revizeAciklamaInput').value.trim();
+    close();
+    await startRevize(calcId, currentRevizeNo + 1, aciklama);
+  };
+}
+
+async function startRevize(calcId, yeniRevizeNo, aciklama) {
+  showToast('Hesaplama yükleniyor…', 'info');
+
+  const { data: calc, error } = await supabase
+    .from('calculations')
+    .select('*')
+    .eq('id', calcId)
+    .single();
+
+  if (error || !calc) {
+    showToast('Hesaplama yüklenemedi.', 'error');
+    return;
+  }
+
+  const ops = calc.operasyonlar || {};
+  state.projeNo          = calc.proje_no || '';
+  state.operasyonTarihi  = calc.operasyon_tarihi || '';
+  state.operations       = (ops.operations || []).map(op => ({ ...op }));
+  state.results          = { ...(ops.results || {}) };
+  state.images           = {};
+  state.selected         = {};
+  state.operations.forEach(op => { state.selected[op.type] = true; });
+  state.editingCalc = {
+    parent_id:       calc.parent_id || calcId,
+    revize_no:       yeniRevizeNo,
+    revize_aciklama: aciklama,
+  };
+
+  // Form alanlarını doldur
+  document.getElementById('projeNo').value          = state.projeNo;
+  document.getElementById('operasyonTarihi').value  = state.operasyonTarihi;
+
+  // Hesaplama sekmesine geç, sonuç adımına götür
+  document.querySelector('.nav-btn[data-view="calculator"]').click();
+  buildResultTabs();
+  renderActiveTab();
+  goToStep(3);
+
+  // Kaydet butonunu güncelle
+  const saveBtn = document.getElementById('btnSaveCalc');
+  saveBtn.textContent = `Revize ${yeniRevizeNo} Kaydet`;
+
+  showToast(`Revize ${yeniRevizeNo} modu aktif. Kaydet butonuyla onaylayın.`, 'success');
+}
+
+async function downloadPdfFromStorage(pdfPath) {
+  showToast('PDF indiriliyor…', 'info');
+  const { data, error } = await supabase.storage.from('pdfs').download(pdfPath);
+  if (error || !data) {
+    showToast('PDF indirilemedi.', 'error');
+    return;
+  }
+  const url = URL.createObjectURL(data);
+  const a   = document.createElement('a');
+  a.href     = url;
+  a.download = pdfPath.split('/').pop();
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }
 
 // ─── Yöneticiye Mesaj ─────────────────────────────────────────────────────────

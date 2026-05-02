@@ -8,7 +8,7 @@ const OP_TYPE_TR = { hottap: 'HotTap', stopple: 'Stopple', tapalama: 'Tapalama',
 // ─── Ana PDF Üretim Fonksiyonu ────────────────────────────────────────────────
 
 /**
- * Hesaplama verilerinden PDF üretir ve indirir.
+ * Hesaplama verilerinden PDF üretir, indirir ve blob döndürür.
  *
  * @param {object} data
  * @param {string} data.projeNo
@@ -17,6 +17,9 @@ const OP_TYPE_TR = { hottap: 'HotTap', stopple: 'Stopple', tapalama: 'Tapalama',
  * @param {Array}  data.operations  - state.operations dizisi
  * @param {object} data.results     - state.results nesnesi
  * @param {object} [data.images]    - { opId: [{ url, name }] }
+ * @param {number} [data.revize_no] - revize numarası (varsayılan 1)
+ * @param {boolean} [data.skipDownload] - true ise indirme yapma, sadece blob döndür
+ * @returns {Promise<Blob>} PDF blob (Storage'a yüklemek için)
  */
 export async function generatePDF(data) {
   if (!window.html2pdf) {
@@ -24,8 +27,9 @@ export async function generatePDF(data) {
   }
 
   const html = buildTemplate(data);
+  const rev = data.revize_no || 1;
 
-  const filename = `ByMEY_HotTap_${data.projeNo || 'Hesap'}_${data.operasyonTarihi || ''}.pdf`
+  const filename = `ByMEY_HotTap_${data.projeNo || 'Hesap'}_${data.operasyonTarihi || ''}_v${rev}.pdf`
     .replace(/[^a-zA-Z0-9_\-\.]/g, '_');
 
   const options = {
@@ -37,9 +41,21 @@ export async function generatePDF(data) {
     pagebreak:   { mode: ['avoid-all', 'css'] },
   };
 
-  // HTML string olarak ver — html2pdf kendi container'ını oluşturur,
-  // opacity/visibility hilelerine gerek kalmaz, boş PDF sorunu ortadan kalkar.
-  await window.html2pdf().set(options).from(html).save();
+  const worker = window.html2pdf().set(options).from(html);
+  // Önce blob üret, sonra istenirse indir
+  const blob = await worker.outputPdf('blob');
+  if (!data.skipDownload) {
+    // İkinci bir kez render etmek yerine aynı blob'u indir
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+  return blob;
 }
 
 // ─── HTML Şablon Oluşturucu ────────────────────────────────────────────────────
@@ -94,13 +110,15 @@ function buildTemplate(data) {
 <body>
 
 <div class="pdf-header">
-  <div class="pdf-title">ByMEY HotTap Ölçüm Kartı</div>
+  <div class="pdf-title">ByMEY HotTap Ölçüm Kartı${data.revize_no && data.revize_no > 1 ? ` <span style="font-size:11pt;color:#dc2626;">— Revize ${data.revize_no}</span>` : ''}</div>
   <div class="pdf-meta">
     <span><b>Proje No:</b> ${esc(data.projeNo || '—')}</span>
     <span><b>Tarih:</b> ${tarihStr}</span>
     <span><b>Operatör:</b> ${esc(data.kullanici || '—')}</span>
+    <span><b>Revize:</b> ${data.revize_no || 1}</span>
     <span><b>Oluşturulma:</b> ${new Date().toLocaleString('tr-TR')}</span>
   </div>
+  ${data.revize_aciklama ? `<div style="margin-top:6px;padding:6px;background:#fef3c7;border-radius:4px;font-size:9pt;"><b>Revize Açıklaması:</b> ${esc(data.revize_aciklama)}</div>` : ''}
 </div>
 
 ${operationsHtml}

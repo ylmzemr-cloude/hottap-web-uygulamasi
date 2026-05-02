@@ -24,3 +24,6 @@ npm-debug.log*
 
 # Supabase yerel geliştirme
 .supabase/
+
+# Claude hafıza dosyaları
+memory/
