@@ -70,6 +70,15 @@ Deno.serve(async (req) => {
         + "<p>Bilgi icin: " + ADMIN_EMAIL + "</p>";
       await sendEmail(kullanici.email, "ByMEY HotTap - Hesap basvurusu", html);
 
+    } else if (tip === "yeni_revize") {
+      const html = "<h2>Hesaplama Revize Edildi</h2>"
+        + "<p><b>Proje No:</b> " + (hesaplama.proje_no || "-") + "</p>"
+        + "<p><b>Kullanici:</b> " + (hesaplama.kullanici_adi || "-") + "</p>"
+        + "<p><b>Tarih:</b> " + (hesaplama.operasyon_tarihi || "-") + "</p>"
+        + "<p><b>Revize No:</b> " + (hesaplama.revize_no || "-") + "</p>"
+        + (hesaplama.revize_aciklama ? "<p><b>Aciklama:</b> " + hesaplama.revize_aciklama + "</p>" : "");
+      await sendEmail(ADMIN_EMAIL, "Revize R" + hesaplama.revize_no + ": " + hesaplama.proje_no + " - " + hesaplama.kullanici_adi, html);
+
     } else if (tip === "yonetici_mesaj") {
       const html = "<h2>Kullanici Mesaji</h2>"
         + "<p><b>Gonderen:</b> " + kullanici.ad_soyad + " (" + kullanici.email + ")</p>"

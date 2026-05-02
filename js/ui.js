@@ -951,12 +951,14 @@ async function saveCalculation() {
         // Admin'e mail (best-effort)
         supabase.functions.invoke('send-email', {
           body: {
-            tip: 'yeni_hesaplama',
+            tip: state.editingCalc ? 'yeni_revize' : 'yeni_hesaplama',
             hesaplama: {
               id: calc.id,
               proje_no: state.projeNo,
               kullanici_adi: currentUser.profile.ad_soyad,
               operasyon_tarihi: state.operasyonTarihi,
+              revize_no: state.editingCalc?.revize_no,
+              revize_aciklama: state.editingCalc?.revize_aciklama,
             },
           },
         }).catch(() => {});
