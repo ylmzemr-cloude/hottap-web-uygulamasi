@@ -2,10 +2,11 @@ import { supabase } from './supabase.js';
 
 // ─── Section tanımları ────────────────────────────────────────────────────────
 
-export const SECTIONS = ['summary', 'results', 'pdf_inputs', 'pdf_results'];
+export const SECTIONS = ['summary', 'results', 'ozet', 'pdf_inputs', 'pdf_results'];
 export const SECTION_LABELS = {
-  summary:     'Ekran\nÖzet',
-  results:     'Ekran\nSonuç',
+  summary:     'Giriş\nEkranı',
+  results:     'Hesap Sonuç\nEkranı',
+  ozet:        'Özet\nEkranı',
   pdf_inputs:  'PDF\nGiriş',
   pdf_results: 'PDF\nSonuç',
 };
@@ -78,10 +79,15 @@ export const VISIBILITY_DEFS = {
 function buildDefault() {
   const def = {};
   for (const [opType, opDef] of Object.entries(VISIBILITY_DEFS)) {
-    def[opType] = { summary: [], results: [], pdf_inputs: [], pdf_results: [] };
+    def[opType] = { summary: [], results: [], ozet: [], pdf_inputs: [], pdf_results: [] };
     for (const field of opDef.fields) {
+      // sections dizisi hangi alanlarda varsayılan olarak işaretli olduğunu belirtir
       for (const sec of field.sections) {
         def[opType][sec].push(field.key);
+      }
+      // Sonuç alanları özette de varsayılan açık
+      if (field.sections.includes('results') && !def[opType].ozet.includes(field.key)) {
+        def[opType].ozet.push(field.key);
       }
     }
   }
@@ -98,6 +104,7 @@ function mergeWithDefaults(saved) {
     result[opType] = {
       summary:     saved[opType]?.summary     ?? def.summary,
       results:     saved[opType]?.results     ?? def.results,
+      ozet:        saved[opType]?.ozet        ?? def.ozet,
       pdf_inputs:  saved[opType]?.pdf_inputs  ?? def.pdf_inputs,
       pdf_results: saved[opType]?.pdf_results ?? def.pdf_results,
     };

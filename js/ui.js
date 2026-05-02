@@ -2,8 +2,7 @@ import { getCurrentUser, logoutUser, checkDemoLimit, decrementDemoHak,
          approveUser, rejectUser, deleteUser, suspendUser, renewDemoHak } from './auth.js';
 import { initTables, getAllPipeData, getAllCutterData, getAllSpringData,
          getPipeRow, getCutterRow, getSpringRow } from './tables.js';
-import { runHotTap, runStopple, runTapalama, runKKM, runGeriAlma, toMm } from './calculator.js';
-import { calculateDelmeSuresi } from './formulas.js';
+import { runHotTap, runStopple, runTapalama, runGeriAlma, toMm } from './calculator.js';
 import { inchToMm, mmToInch } from './units.js';
 import { supabase } from './supabase.js';
 import { loadVisibility, getVisibility, saveVisibility, VISIBILITY_DEFS } from './settings.js';
@@ -171,11 +170,6 @@ function validateStep1() {
     showEl(alertEl, 'En az bir operasyon seçin.');
     return false;
   }
-  if (state.selected.stopple && !state.selected.hottap) {
-    showEl(alertEl, 'Stopple için HotTap zorunludur. HotTap\'ı da seçin.');
-    return false;
-  }
-
   alertEl.classList.add('hidden');
   return true;
 }
@@ -251,9 +245,33 @@ function renderOperationCards() {
     });
   });
 
-  // Pipe OD değişince cutter listesini filtrele
+  // Pipe OD değişince cutter listesini filtrele ve etkinleştir
   document.querySelectorAll('.sel-pipeOd').forEach(sel => {
-    sel.addEventListener('change', () => filterCutterByPipe(sel));
+    sel.addEventListener('change', () => {
+      filterCutterByPipe(sel);
+      const opId = sel.closest('.op-card').dataset.opId;
+      const cutterSel = document.querySelector(`.op-card[data-op-id="${opId}"] .sel-cutterOd`);
+      if (cutterSel) cutterSel.disabled = !sel.value;
+    });
+  });
+
+  // Stopple standalone pipe seçimi
+  document.querySelectorAll('.sel-stPipeOd').forEach(sel => {
+    sel.addEventListener('change', () => {
+      // Pipe seçilince cutter = pipe OD (sadece bilgi amaçlı note var, input yok)
+    });
+  });
+
+  // Virgül → nokta: tüm metin tabanlı sayısal alanlarda
+  document.getElementById('operationCards').addEventListener('input', e => {
+    if (e.target.classList.contains('input-field')) {
+      const v = e.target.value;
+      if (v.includes(',')) {
+        const pos = e.target.selectionStart;
+        e.target.value = v.replace(',', '.');
+        try { e.target.setSelectionRange(pos, pos); } catch (_) {}
+      }
+    }
   });
 
   // İlk render'dan sonra mevcut seçimlere göre conditional alanları ayarla
@@ -312,10 +330,16 @@ function updateConditionalFields() {
 
 function filterCutterByPipe(pipeSelect) {
   const opId = pipeSelect.closest('.op-card').dataset.opId;
-  const pipeInch = parseFloat(pipeSelect.value) || 999;
+  const pipeInch = parseFloat(pipeSelect.value) || null;
   const cutterSel = document.querySelector(`.op-card[data-op-id="${opId}"] .sel-cutterOd`);
   if (!cutterSel) return;
+  if (!pipeInch) {
+    cutterSel.innerHTML = '<option value="">— Önce Pipe OD seçin —</option>';
+    cutterSel.disabled = true;
+    return;
+  }
   cutterSel.innerHTML = buildCutterOptions(pipeInch);
+  cutterSel.disabled = false;
 }
 
 function validateCutterVsPipe(cutterSelect) {
@@ -351,7 +375,7 @@ function unitToggle(prefix, opId, defaultUnit = 'mm') {
   const inActive  = defaultUnit === 'inch' ? 'active' : '';
   return `<div class="unit-toggle" id="unit-${prefix}-${opId}">
     <button type="button" class="unit-toggle__btn ${mmActive}" data-unit="mm">mm</button>
-    <button type="button" class="unit-toggle__btn ${inActive}" data-unit="inch">"</button>
+    <button type="button" class="unit-toggle__btn ${inActive}" data-unit="inch">inç</button>
   </div>`;
 }
 
@@ -362,7 +386,7 @@ function inputRow(id, label, placeholder, field, opId, opts = {}) {
     <label for="${id}">${label} ${helpBtn(field)}</label>
     ${noteHtml}
     <div class="input-with-unit">
-      <input type="number" id="${id}" class="input-field" step="0.001" placeholder="${placeholder}" ${readOnly}>
+      <input type="text" inputmode="decimal" id="${id}" class="input-field" placeholder="${placeholder}" ${readOnly}>
       ${opts.unitToggle ? unitToggle(field, opId) : `<span class="unit-badge" style="display:flex;align-items:center;padding:0 10px;background:#f1f5f9;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;color:#64748b;">${opts.fixedUnit || 'mm'}</span>`}
     </div>
     <span class="field-error" id="${id}Err" role="alert"></span>
@@ -382,7 +406,7 @@ function cardHotTap(op, pipeOptions, cutterOptions) {
 
     <div class="field">
       <label for="cutterOd-${id}">Cutter OD ${helpBtn('CutterOD')}</label>
-      <select id="cutterOd-${id}" class="select-field sel-cutterOd">${cutterOptions}</select>
+      <select id="cutterOd-${id}" class="select-field sel-cutterOd" disabled><option value="">— Önce Pipe OD seçin —</option></select>
       <span class="field-error" id="cutterOd-${id}Err" role="alert"></span>
     </div>
 
@@ -390,36 +414,15 @@ function cardHotTap(op, pipeOptions, cutterOptions) {
       <label for="cutterWall-${id}">Cutter Et Kalınlığı ${helpBtn('CutterWall')}</label>
       <small style="display:block;font-size:11px;color:#64748b;margin-bottom:4px;">Sadece mm girilir</small>
       <div class="input-with-unit">
-        <input type="number" id="cutterWall-${id}" class="input-field" step="0.001" placeholder="12.700">
+        <input type="text" inputmode="decimal" id="cutterWall-${id}" class="input-field" placeholder="12.700">
         <span style="display:flex;align-items:center;padding:0 10px;background:#f1f5f9;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;color:#64748b;">mm</span>
       </div>
       <span class="field-error" id="cutterWall-${id}Err" role="alert"></span>
     </div>
 
-    ${inputRow('fieldA-'+id, 'A', '317.500', 'A', id, { unitToggle: true, note: 'Pilot uç adaptörden dışarı taşıyorsa negatif değer girin' })}
-    ${inputRow('fieldB-'+id, 'B', '203.200', 'B', id, { unitToggle: true })}
-    ${inputRow('fieldRef1-'+id, 'Ref1', '6.350', 'Ref1', id, { unitToggle: true, note: 'Negatif değer alabilir' })}
-
-    <details style="margin-top:12px;">
-      <summary style="cursor:pointer;font-size:13px;color:#64748b;padding:8px 0;">
-        ⬛ Delme Süresi (Opsiyonel)
-      </summary>
-      <div style="padding-top:10px;">
-        <div class="field">
-          <label for="kkm-${id}">KKM ${helpBtn('KKM')}</label>
-          <small style="display:block;font-size:11px;color:#64748b;margin-bottom:4px;">Sadece inç girilir</small>
-          <div class="input-with-unit">
-            <input type="number" id="kkm-${id}" class="input-field" step="0.001" placeholder="0.000">
-            <span style="display:flex;align-items:center;padding:0 10px;background:#f1f5f9;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;color:#64748b;">"</span>
-          </div>
-        </div>
-        <div class="field">
-          <label for="ts-${id}">TS ${helpBtn('TS')}</label>
-          <input type="number" id="ts-${id}" class="input-field" step="1" placeholder="0">
-          <span class="field-error" id="ts-${id}Err" role="alert"></span>
-        </div>
-      </div>
-    </details>
+    ${inputRow('fieldA-'+id, 'A', '', 'A', id, { unitToggle: true, note: 'Pilot uç adaptörden dışarı taşıyorsa negatif değer girin' })}
+    ${inputRow('fieldB-'+id, 'B', '', 'B', id, { unitToggle: true })}
+    ${inputRow('fieldRef1-'+id, 'Ref1', '', 'Ref1', id, { unitToggle: true, note: 'Negatif değer alabilir' })}
 
     <div class="image-uploader" data-op-id="${id}">
       <div class="image-uploader__previews" id="previews-${id}"></div>
@@ -433,13 +436,25 @@ function cardHotTap(op, pipeOptions, cutterOptions) {
 
 function cardStopple(op, hottapOps) {
   const id = op.id;
+  const hasHotTap = hottapOps.length > 0;
+  const pipeOptions = buildPipeOptions();
+
+  const pipeSection = hasHotTap
+    ? `<p style="font-size:12px;color:#64748b;margin-bottom:14px;">Pipe OD ve Cutter OD, HotTap operasyonundan otomatik alınır.</p>`
+    : `<div class="field">
+        <label for="stPipeOd-${id}">Pipe OD ${helpBtn('PipeOD')}</label>
+        <select id="stPipeOd-${id}" class="select-field sel-stPipeOd">${pipeOptions}</select>
+        <small style="display:block;font-size:11px;color:#64748b;margin-top:4px;">Cutter OD = Pipe OD (otomatik)</small>
+        <span class="field-error" id="stPipeOd-${id}Err" role="alert"></span>
+      </div>
+      ${inputRow('fieldStB-'+id, 'B', '', 'B', id, { unitToggle: true, note: 'Adaptörden vana altına' })}`;
 
   return `<div class="card op-card" data-op-id="${id}" data-op-type="stopple">
     <p class="card__title">Stopple — Tıkama</p>
-    <p style="font-size:12px;color:#64748b;margin-bottom:14px;">Cutter OD = Pipe OD (çapa çap) zorunludur. HotTap verilerini kullanır.</p>
+    ${pipeSection}
 
-    ${inputRow('fieldD-'+id, 'D', '0.000', 'D', id, { unitToggle: true })}
-    ${inputRow('fieldRef2-'+id, 'Ref2', '0.000', 'Ref2', id, { unitToggle: true, note: 'Negatif değer alabilir' })}
+    ${inputRow('fieldD-'+id, 'D', '', 'D', id, { unitToggle: true })}
+    ${inputRow('fieldRef2-'+id, 'Ref2', '', 'Ref2', id, { unitToggle: true, note: 'Negatif değer alabilir' })}
 
     <div class="image-uploader" data-op-id="${id}">
       <div class="image-uploader__previews" id="previews-${id}"></div>
@@ -469,11 +484,11 @@ function cardTapalama(op, hottapOps, cutterOptions) {
 
     ${cutterSection}
 
-    ${inputRow('fieldG-'+id, 'G', '0.000', 'G', id, { unitToggle: true })}
-    ${inputRow('fieldH-'+id, 'H', '0.000', 'H', id, { unitToggle: true })}
+    ${inputRow('fieldG-'+id, 'G', '', 'G', id, { unitToggle: true })}
+    ${inputRow('fieldH-'+id, 'H', '', 'H', id, { unitToggle: true })}
 
     <div id="fField-${id}" class="hidden">
-      ${inputRow('fieldF-'+id, 'F  (>12" cutter)', '0.000', 'F', id, { unitToggle: true })}
+      ${inputRow('fieldF-'+id, 'F  (>12" cutter)', '', 'F', id, { unitToggle: true })}
     </div>
 
     <div class="image-uploader" data-op-id="${id}">
@@ -503,11 +518,11 @@ function cardGeriAlma(op, cutterOptions, hottapOps) {
 
     ${cutterSection}
 
-    ${inputRow('fieldM-'+id, 'M', '0.000', 'M', id, { unitToggle: true })}
-    ${inputRow('fieldN-'+id, 'N', '0.000', 'N', id, { unitToggle: true })}
+    ${inputRow('fieldM-'+id, 'M', '', 'M', id, { unitToggle: true })}
+    ${inputRow('fieldN-'+id, 'N', '', 'N', id, { unitToggle: true })}
 
     <div id="gaSpringField-${id}" class="hidden">
-      ${inputRow('fieldGaSpring-'+id, 'Yay (>12" cutter)', '0.000', 'Y', id, { unitToggle: true })}
+      ${inputRow('fieldGaSpring-'+id, 'Yay (>12" cutter)', '', 'Y', id, { unitToggle: true })}
     </div>
 
     <div class="image-uploader" data-op-id="${id}">
@@ -532,7 +547,8 @@ function getUnit(prefix, opId) {
  * Toggle yoksa varsayılan: mm.
  */
 function getFieldMm(fieldId) {
-  const val = parseFloat(document.getElementById(fieldId)?.value);
+  const raw = document.getElementById(fieldId)?.value?.replace(',', '.');
+  const val = parseFloat(raw);
   if (isNaN(val)) return null;
   // 'fieldA-ht-1' → field='A', opId='ht-1'
   const m = fieldId.match(/^field([A-Za-z]+)-(.+)$/);
@@ -560,25 +576,42 @@ function collectFormData() {
         pipeIdMm:             pipeRow?.pipe_id_mm     ?? null,
         pipeWallMm:           pipeRow?.pipe_wall_mm   ?? null,
         cutterOdActualMm:     cutterRow?.cutter_actual_mm ?? null,
-        cutterWallMm:         parseFloat(document.getElementById('cutterWall-' + id)?.value) || null,
+        cutterWallMm:         parseFloat(String(document.getElementById('cutterWall-' + id)?.value).replace(',', '.')) || null,
         ref1Mm:               getFieldMm('fieldRef1-' + id),
         aMm:                  getFieldMm('fieldA-'    + id),
         bMm:                  getFieldMm('fieldB-'    + id),
-        kkmInch:              parseFloat(document.getElementById('kkm-' + id)?.value) || null,
-        ts:                   parseFloat(document.getElementById('ts-'  + id)?.value) || null,
       };
     }
 
     if (op.type === 'stopple') {
-      // Tek HotTap olduğu için otomatik bağlanır
       const hotTap = state.operations.find(o => o.type === 'hottap');
 
-      op.data = {
-        linkedHottapId: hotTap?.id || null,
-        ...(hotTap?.data || {}),
-        dMm:    getFieldMm('fieldD-'    + id),
-        ref2Mm: getFieldMm('fieldRef2-' + id),
-      };
+      if (hotTap) {
+        op.data = {
+          linkedHottapId: hotTap.id,
+          ...(hotTap.data || {}),
+          dMm:    getFieldMm('fieldD-'    + id),
+          ref2Mm: getFieldMm('fieldRef2-' + id),
+        };
+      } else {
+        // Standalone Stopple: kendi pipe seçimi, cutter = pipe OD
+        const pipeInch = parseFloat(document.getElementById('stPipeOd-' + id)?.value) || null;
+        const pipeRow  = pipeInch ? getPipeRow(pipeInch) : null;
+        op.data = {
+          linkedHottapId:      null,
+          standalone:          true,
+          pipeOdNominalInch:   pipeInch,
+          cutterOdNominalInch: pipeInch,
+          pipeOdMm:            pipeRow?.pipe_od_mm   ?? null,
+          pipeIdMm:            pipeRow?.pipe_id_mm   ?? null,
+          pipeWallMm:          pipeRow?.pipe_wall_mm ?? null,
+          cutterOdActualMm:    pipeRow?.pipe_od_mm   ?? null,
+          cutterWallMm:        pipeRow?.pipe_wall_mm ?? null,
+          bMm:                 getFieldMm('fieldStB-'  + id),
+          dMm:                 getFieldMm('fieldD-'    + id),
+          ref2Mm:              getFieldMm('fieldRef2-' + id),
+        };
+      }
     }
 
     if (op.type === 'tapalama') {
@@ -742,8 +775,11 @@ function renderSummaryPage() {
         <div class="alert alert--warning">Hesap eksik veya hatalı.</div>
       </div>`;
     }
+    const isAdmin = currentUser?.profile?.rol === 'admin';
+    const ozetAllowed = isAdmin ? null : (getVisibility()[op.type]?.ozet || []);
     const vals = Object.entries(r.results || {}).map(([k, c]) => {
       if (typeof c?.result !== 'number') return '';
+      if (!isAdmin && ozetAllowed && !ozetAllowed.includes(k)) return '';
       const lbl = (RESULT_LABELS[k] || k);
       return `<div class="summary-row">
         <span class="summary-row__label">${lbl}</span>
@@ -779,8 +815,25 @@ const RESULT_LABELS = {
   tekerBoruMerkezi:   'Centerline',
   tekerTemasMesafesi: 'Roller to Bottom',
   tapalama:           'Total Set (Tapalama)',
-  delmeSuresi:        'Delme Süresi (dk)',
   geriAlmaToplam:     'Geri Alma — Total Travel',
+};
+
+const RESULT_FORMULAS = {
+  cutterID:           'Cutter ID = Cutter OD − 2 × Et',
+  c1:                 'C1 = (Pipe OD/2) − √[(Pipe ID/2)² − (Cutter OD/2)²]',
+  c:                  'C = C1 + Ref1',
+  couponFree:         'Coupon Free = √[(Pipe OD/2)² − (Cutter OD/2)²]',
+  catchPosition:      'Catch Position = Coupon Free + Ref1 − Pipe Wall',
+  nestingSpace:       'Nesting Space = Coupon Free + 25.4',
+  pilotTemas:         'Lower-in = A + B',
+  maxTapping:         'Max Tapping = Pipe OD/2 + Ref1 + 3.175',
+  maxTravel:          'Max Travel = A + B + Pipe OD/2 + Ref1 + 3.175',
+  e:                  'E = Pipe OD − Pipe Wall',
+  stoppleOlcusu:      'Total Set = D + B + E',
+  tekerBoruMerkezi:   'Centerline = Ref2 + B + Pipe OD/2',
+  tekerTemasMesafesi: 'Roller to Bottom = E + B + Ref2',
+  tapalama:           'Total Set = G + H + Y',
+  geriAlmaToplam:     'Total Travel = M + N + Yay',
 };
 
 function renderDataSummary(op) {
@@ -847,16 +900,24 @@ function renderCalcResults(result, opType) {
     if (!isAdmin && allowed && !allowed.includes(key)) return '';
     const val = calc.result.toFixed(3);
     const valInch = mmToInch(calc.result).toFixed(3);
-    const stepsHtml = (calc.steps || []).map(s => `<li>${s}</li>`).join('');
     const title = RESULT_LABELS[key] || key;
-    const stepsBlock = stepsHtml ? `<details class="result-steps">
+    const formula = RESULT_FORMULAS[key];
+    const formulaHtml = formula
+      ? `<div style="font-size:11px;color:#64748b;margin-top:3px;font-family:monospace;">${formula}</div>`
+      : '';
+    const helpHtml = helpTexts[key]
+      ? `<button type="button" class="help-btn" data-field="${key}" aria-label="${key} yardım" style="margin-left:4px;">?</button>`
+      : '';
+    const stepsHtml = (calc.steps || []).map(s => `<li>${s}</li>`).join('');
+    const stepsBlock = isAdmin && stepsHtml ? `<details class="result-steps">
       <summary>Hesap adımlarını göster</summary>
       <ul class="steps-list">${stepsHtml}</ul>
     </details>` : '';
     return `<div class="result-block">
-      <div class="result-block__title">${title}</div>
+      <div class="result-block__title">${title}${helpHtml}</div>
       <div class="result-block__value">${val} <span style="font-size:14px;color:#64748b;">mm</span></div>
       <div class="result-block__value-sub">${valInch}"</div>
+      ${formulaHtml}
       ${stepsBlock}
     </div>`;
   }).join('');
@@ -874,13 +935,6 @@ function calculateOp(opId) {
 
   if (op.type === 'hottap') {
     result = runHotTap(op.data);
-    // KKM varsa ekle
-    if (op.data.kkmInch && op.data.ts) {
-      const kkmResult = runKKM({ kkmInch: op.data.kkmInch, ts: op.data.ts });
-      if (kkmResult.valid) {
-        result.results = { ...result.results, ...kkmResult.results };
-      }
-    }
   } else if (op.type === 'stopple') {
     result = runStopple(op.data);
   } else if (op.type === 'tapalama') {
@@ -1202,10 +1256,11 @@ function renderVisibilityForm() {
   if (!formEl) return;
 
   const vis = getVisibility();
-  const COLS = ['summary', 'results', 'pdf_inputs', 'pdf_results'];
+  const COLS = ['summary', 'results', 'ozet', 'pdf_inputs', 'pdf_results'];
   const COL_LABELS = {
-    summary:     'Ekran\nÖzet',
-    results:     'Ekran\nSonuç',
+    summary:     'Giriş\nEkranı',
+    results:     'Hesap Sonuç\nEkranı',
+    ozet:        'Özet\nEkranı',
     pdf_inputs:  'PDF\nGiriş',
     pdf_results: 'PDF\nSonuç',
   };
@@ -1225,9 +1280,6 @@ function renderVisibilityForm() {
 
     const rows = def.fields.map(f => {
       const cells = COLS.map(sec => {
-        if (!f.sections.includes(sec)) {
-          return `<td style="${cellStyle}color:#cbd5e1;">—</td>`;
-        }
         const checked = (opVis[sec] || []).includes(f.key) ? 'checked' : '';
         return `<td style="${cellStyle}">
           <input type="checkbox"
@@ -1264,7 +1316,7 @@ async function saveVisibilityFromForm() {
   const newVis = {};
   document.querySelectorAll('#visibilityForm input[type=checkbox]').forEach(cb => {
     const { op, section, key } = cb.dataset;
-    if (!newVis[op]) newVis[op] = { summary: [], results: [], pdf_inputs: [], pdf_results: [] };
+    if (!newVis[op]) newVis[op] = { summary: [], results: [], ozet: [], pdf_inputs: [], pdf_results: [] };
     if (cb.checked) newVis[op][section].push(key);
   });
 

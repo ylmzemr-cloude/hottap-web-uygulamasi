@@ -13,7 +13,6 @@ import {
   calculateTekerBoruMerkezi,
   calculateTekerTemasMesafesi,
   calculateTapalama,
-  calculateDelmeSuresi,
   calculateGeriAlmaToplam,
 } from './formulas.js';
 
@@ -77,31 +76,32 @@ export function runHotTap(p) {
  * @param {number} p.ref2Mm - Ref2 ölçüsü, negatif olabilir
  */
 export function runStopple(p) {
-  const hotTapResult = runHotTap(p);
-  if (!hotTapResult.valid) return hotTapResult;
-
   const { valid, errors } = validateOperation('stopple', {
     D:    p.dMm,
     ref2: p.ref2Mm,
   });
   if (!valid) return { valid: false, errors, results: null };
 
-  const e                = calculateE(p.pipeOdMm, p.pipeWallMm);
-  const stoppleOlcusu    = calculateStoppleOlcusu(p.dMm, p.bMm, e.result);
-  const tekerBoruMerkezi = calculateTekerBoruMerkezi(p.ref2Mm, p.bMm, p.pipeOdMm);
-  const tekerTemas       = calculateTekerTemasMesafesi(e.result, p.bMm, p.ref2Mm);
+  if (!p.pipeOdMm || !p.pipeWallMm) {
+    return { valid: false, errors: { pipeOd: 'Pipe OD zorunludur.' }, results: null };
+  }
 
-  return {
-    valid: true,
-    errors: {},
-    results: {
-      ...hotTapResult.results,
-      e,
-      stoppleOlcusu,
-      tekerBoruMerkezi,
-      tekerTemasMesafesi: tekerTemas,
-    },
-  };
+  const e                = calculateE(p.pipeOdMm, p.pipeWallMm);
+  const stoppleOlcusu    = calculateStoppleOlcusu(p.dMm, p.bMm ?? 0, e.result);
+  const tekerBoruMerkezi = calculateTekerBoruMerkezi(p.ref2Mm, p.bMm ?? 0, p.pipeOdMm);
+  const tekerTemas       = calculateTekerTemasMesafesi(e.result, p.bMm ?? 0, p.ref2Mm);
+
+  const stoppleResults = { e, stoppleOlcusu, tekerBoruMerkezi, tekerTemasMesafesi: tekerTemas };
+
+  // HotTap verisi varsa (bağımsız değilse) HotTap sonuçlarını da ekle
+  if (!p.standalone) {
+    const hotTapResult = runHotTap(p);
+    if (hotTapResult.valid) {
+      return { valid: true, errors: {}, results: { ...hotTapResult.results, ...stoppleResults } };
+    }
+  }
+
+  return { valid: true, errors: {}, results: stoppleResults };
 }
 
 // ─── Tapalama ─────────────────────────────────────────────────────────────────
@@ -143,31 +143,6 @@ export function runTapalama(p) {
   };
 }
 
-// ─── KKM / Delme Süresi ───────────────────────────────────────────────────────
-
-/**
- * KKM (kalan kesim mesafesi) hesaplaması yapar.
- *
- * @param {object} p
- * @param {number} p.kkmInch - Kalan kesim mesafesi (SADECE inç)
- * @param {number} p.ts      - Tur sayısı
- */
-export function runKKM(p) {
-  if (!p.kkmInch || !p.ts) {
-    return {
-      valid: false,
-      errors: {
-        kkmInch: p.kkmInch ? null : 'Bu alan zorunludur.',
-        ts:      p.ts      ? null : 'Bu alan zorunludur.',
-      },
-      results: null,
-    };
-  }
-
-  const advancePerTurnInch = p.pipeOdNominalInch <= 12 ? 0.125 : 0.004;
-  const delmeSuresi = calculateDelmeSuresi(p.kkmInch, p.ts, advancePerTurnInch);
-  return { valid: true, errors: {}, results: { delmeSuresi } };
-}
 
 // ─── Geri Alma ────────────────────────────────────────────────────────────────
 
