@@ -378,11 +378,6 @@ function cardHotTap(op, pipeOptions, cutterOptions) {
       <span class="field-error" id="cutterWall-${id}Err" role="alert"></span>
     </div>
 
-    <div class="field">
-      <label>Ölçü Birimi</label>
-      ${unitToggle('global', id)}
-    </div>
-
     ${inputRow('fieldA-'+id, 'A', '317.500', 'A', id, { unitToggle: true, note: 'Pilot uç adaptörden dışarı taşıyorsa negatif değer girin' })}
     ${inputRow('fieldB-'+id, 'B', '203.200', 'B', id, { unitToggle: true })}
     ${inputRow('fieldRef1-'+id, 'Ref1', '6.350', 'Ref1', id, { unitToggle: true, note: 'Negatif değer alabilir' })}
@@ -425,11 +420,6 @@ function cardStopple(op, hottapOps) {
     <p class="card__title">Stopple — Tıkama</p>
     <p style="font-size:12px;color:#64748b;margin-bottom:14px;">Cutter OD = Pipe OD (çapa çap) zorunludur. HotTap verilerini kullanır.</p>
 
-    <div class="field">
-      <label>Ölçü Birimi</label>
-      ${unitToggle('global', id)}
-    </div>
-
     ${inputRow('fieldD-'+id, 'D', '0.000', 'D', id, { unitToggle: true })}
     ${inputRow('fieldRef2-'+id, 'Ref2', '0.000', 'Ref2', id, { unitToggle: true, note: 'Negatif değer alabilir' })}
 
@@ -460,11 +450,6 @@ function cardTapalama(op, hottapOps, cutterOptions) {
     <p class="card__title">Tapalama — Tamamlama</p>
 
     ${cutterSection}
-
-    <div class="field">
-      <label>Ölçü Birimi</label>
-      ${unitToggle('global', id)}
-    </div>
 
     ${inputRow('fieldG-'+id, 'G', '0.000', 'G', id, { unitToggle: true })}
     ${inputRow('fieldH-'+id, 'H', '0.000', 'H', id, { unitToggle: true })}
@@ -500,11 +485,6 @@ function cardGeriAlma(op, cutterOptions, hottapOps) {
 
     ${cutterSection}
 
-    <div class="field">
-      <label>Ölçü Birimi</label>
-      ${unitToggle('global', id)}
-    </div>
-
     ${inputRow('fieldM-'+id, 'M', '0.000', 'M', id, { unitToggle: true })}
     ${inputRow('fieldN-'+id, 'N', '0.000', 'N', id, { unitToggle: true })}
 
@@ -529,9 +509,18 @@ function getUnit(prefix, opId) {
   return activeBtn?.dataset.unit || 'mm';
 }
 
-function getFieldMm(fieldId, unit) {
+/**
+ * fieldId'den (örn: 'fieldA-ht-1') alan bazlı unit toggle'ını bulur ve mm değer döner.
+ * Toggle yoksa varsayılan: mm.
+ */
+function getFieldMm(fieldId) {
   const val = parseFloat(document.getElementById(fieldId)?.value);
   if (isNaN(val)) return null;
+  // 'fieldA-ht-1' → field='A', opId='ht-1'
+  const m = fieldId.match(/^field([A-Za-z]+)-(.+)$/);
+  if (!m) return val;
+  const [, fieldName, opId] = m;
+  const unit = getUnit(fieldName, opId);
   return unit === 'inch' ? inchToMm(val) : val;
 }
 
@@ -540,7 +529,6 @@ function collectFormData() {
     const id = op.id;
 
     if (op.type === 'hottap') {
-      const unit = getUnit('global', id);
       const pipeInch = parseFloat(document.getElementById('pipeOd-' + id)?.value) || null;
       const cutterInch = parseFloat(document.getElementById('cutterOd-' + id)?.value) || null;
 
@@ -555,29 +543,27 @@ function collectFormData() {
         pipeWallMm:           pipeRow?.pipe_wall_mm   ?? null,
         cutterOdActualMm:     cutterRow?.cutter_actual_mm ?? null,
         cutterWallMm:         parseFloat(document.getElementById('cutterWall-' + id)?.value) || null,
-        ref1Mm:               getFieldMm('fieldRef1-' + id, unit),
-        aMm:                  getFieldMm('fieldA-'    + id, unit),
-        bMm:                  getFieldMm('fieldB-'    + id, unit),
+        ref1Mm:               getFieldMm('fieldRef1-' + id),
+        aMm:                  getFieldMm('fieldA-'    + id),
+        bMm:                  getFieldMm('fieldB-'    + id),
         kkmInch:              parseFloat(document.getElementById('kkm-' + id)?.value) || null,
         ts:                   parseFloat(document.getElementById('ts-'  + id)?.value) || null,
       };
     }
 
     if (op.type === 'stopple') {
-      const unit = getUnit('global', id);
       // Tek HotTap olduğu için otomatik bağlanır
       const hotTap = state.operations.find(o => o.type === 'hottap');
 
       op.data = {
         linkedHottapId: hotTap?.id || null,
         ...(hotTap?.data || {}),
-        dMm:    getFieldMm('fieldD-'    + id, unit),
-        ref2Mm: getFieldMm('fieldRef2-' + id, unit),
+        dMm:    getFieldMm('fieldD-'    + id),
+        ref2Mm: getFieldMm('fieldRef2-' + id),
       };
     }
 
     if (op.type === 'tapalama') {
-      const unit = getUnit('global', id);
       const hotTap = state.operations.find(o => o.type === 'hottap');
       // HotTap varsa cutter ondan, yoksa kullanıcı seçiminden
       const cutterFromForm = parseFloat(document.getElementById('cutterOd-' + id)?.value) || null;
@@ -588,14 +574,13 @@ function collectFormData() {
         linkedHottapId:      hotTap?.id || null,
         cutterOdNominalInch: cutterNominal,
         springTravelMm:      springRow?.spring_travel_mm ?? null,
-        gMm:  getFieldMm('fieldG-' + id, unit),
-        hMm:  getFieldMm('fieldH-' + id, unit),
-        fMm:  getFieldMm('fieldF-' + id, unit),
+        gMm:  getFieldMm('fieldG-' + id),
+        hMm:  getFieldMm('fieldH-' + id),
+        fMm:  getFieldMm('fieldF-' + id),
       };
     }
 
     if (op.type === 'geri-alma') {
-      const unit = getUnit('global', id);
       const hotTap = state.operations.find(o => o.type === 'hottap');
       const cutterFromForm = parseFloat(document.getElementById('cutterOd-' + id)?.value) || null;
       const cutterNominal = hotTap?.data?.cutterOdNominalInch ?? cutterFromForm;
@@ -603,14 +588,14 @@ function collectFormData() {
       const isLargerThan12 = (cutterNominal || 0) > 12;
       // ≤12" tablodan, >12" kullanıcı girer
       const springTravelMm = isLargerThan12
-        ? getFieldMm('fieldGaSpring-' + id, unit)
+        ? getFieldMm('fieldGaSpring-' + id)
         : (springRow?.spring_travel_mm ?? null);
 
       op.data = {
         cutterOdNominalInch: cutterNominal,
         springTravelMm,
-        mMm: getFieldMm('fieldM-' + id, unit),
-        nMm: getFieldMm('fieldN-' + id, unit),
+        mMm: getFieldMm('fieldM-' + id),
+        nMm: getFieldMm('fieldN-' + id),
       };
     }
   }
