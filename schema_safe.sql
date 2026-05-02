@@ -30,8 +30,15 @@ CREATE TABLE IF NOT EXISTS public.calculations (
   operasyonlar         jsonb NOT NULL,
   resimler             text[] DEFAULT '{}',
   sync_durum           text DEFAULT 'synced'
-                         CHECK (sync_durum IN ('synced', 'pending', 'error'))
+                         CHECK (sync_durum IN ('synced', 'pending', 'error')),
+  revize_no            integer NOT NULL DEFAULT 1,
+  parent_id            uuid REFERENCES public.calculations(id) ON DELETE SET NULL,
+  revize_aciklama      text,
+  pdf_storage_path     text
 );
+
+CREATE INDEX IF NOT EXISTS idx_calculations_parent_id
+  ON public.calculations(parent_id);
 
 CREATE TABLE IF NOT EXISTS public.pipe_data (
   id           serial PRIMARY KEY,
