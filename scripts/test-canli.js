@@ -10,6 +10,7 @@ const { chromium } = require('playwright');
 
 // ── AYARLAR ──────────────────────────────────────────────────────────────────
 const INDEX_URL    = 'https://ylmzemr-cloude.github.io/hottap-web-uygulamasi/';
+const APP_URL      = 'https://ylmzemr-cloude.github.io/hottap-web-uygulamasi/app.html';
 const SUPABASE_URL = 'https://vjmkevcunopwubniffbn.supabase.co';
 const ANON_KEY     = 'sb_publishable_YX5c5gt5OUDy9KyAIelhOA_36BTTKOC';
 const ADMIN_EMAIL  = 'ylmz.emr@gmail.com';
@@ -75,8 +76,23 @@ async function waitForAppReady(page, timeout = 18000) {
   );
 }
 
-async function loginAs(page, email, password) {
+// Mevcut oturumu koruyarak uygulamayı yeniden yükler ve Adım 1'e getirir
+async function gotoFreshCalc(page) {
+  await page.goto(APP_URL, { waitUntil: 'domcontentloaded' });
+  await waitForAppReady(page);
+  await page.waitForSelector('#step-project:not(.hidden)', { timeout: 8000 });
+}
+
+async function clearSession(page) {
+  await page.goto(INDEX_URL, { waitUntil: 'domcontentloaded' });
+  await page.evaluate(() => {
+    Object.keys(localStorage).filter(k => k.startsWith('sb-')).forEach(k => localStorage.removeItem(k));
+  });
   await page.goto(INDEX_URL, { waitUntil: 'networkidle' });
+}
+
+async function loginAs(page, email, password) {
+  await clearSession(page);
   await page.fill('#loginEmail', email);
   await page.fill('#loginPassword', password);
   await page.click('#loginBtn');
@@ -85,7 +101,7 @@ async function loginAs(page, email, password) {
 }
 
 async function loginAndExpectError(page, email, password, beklenenMetin) {
-  await page.goto(INDEX_URL, { waitUntil: 'networkidle' });
+  await clearSession(page);
   await page.fill('#loginEmail', email);
   await page.fill('#loginPassword', password);
   await page.click('#loginBtn');
@@ -108,12 +124,12 @@ async function kayitOl(page, email) {
   await waitForAlert(page, 'success', 18000);
 }
 
+// Adım 1'i doldurup Adım 3'e (sonuç) kadar gider, opId döndürür
 async function fillHottap(page, projeNo) {
-  await page.click('[data-view="new-calc"]');
-  await page.waitForSelector('#step-project:not(.hidden)', { timeout: 6000 });
+  await gotoFreshCalc(page);
   await page.fill('#projeNo', projeNo);
   await page.fill('#operasyonTarihi', new Date().toISOString().slice(0, 10));
-  await page.click('[data-op="hottap"][data-action="inc"]');
+  await page.check('#op-hottap');
   await page.click('#btnStep1Next');
   await page.waitForSelector('#step-data:not(.hidden)', { timeout: 6000 });
   const opCard = await page.waitForSelector('.op-card[data-op-type="hottap"]', { timeout: 6000 });
@@ -182,6 +198,25 @@ async function apiUpdateUser(token, userId, patch) {
     body: JSON.stringify(patch),
   });
   return res.status;
+}
+
+async function apiGetUserByEmail(token, email) {
+  const enc = encodeURIComponent(email);
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/users?email=eq.${enc}&select=id,onay_durumu,rol`, {
+    headers: { apikey: ANON_KEY, Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  return Array.isArray(data) ? data[0] : null;
+}
+
+// Admin token önbellekle (her KAT için yeniden almak zorunda kalma)
+let _adminToken = null;
+async function getAdminToken() {
+  if (_adminToken) return _adminToken;
+  const s = await apiSignIn(ADMIN_EMAIL, ADMIN_PASS);
+  if (!s.access_token) throw new Error('Admin token alınamadı');
+  _adminToken = s.access_token;
+  return _adminToken;
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -290,7 +325,29 @@ async function kat2(page) {
   const lcPasif = `pasif_${TS}@testmail.invalid`;
   const lcSil   = `sil_${TS}@testmail.invalid`;
 
-  // 2.1 Yeni kayıt → bekleyen listesi
+  // Yardımcı: kayıt ol + admin API ile onayla/reddet/suspend/sil
+  async function kayitVeOnayla(email, tip) {
+    await kayitOl(page, email);
+    const adminToken = await getAdminToken();
+    const u = await apiGetUserByEmail(adminToken, email);
+    if (!u) throw new Error(`${email} public.users'da bulunamadı`);
+    if (tip === 'tam_kullanici') {
+      await apiUpdateUser(adminToken, u.id, { rol: 'tam_kullanici', onay_durumu: 'onaylandi', demo_kalan_hak: null });
+    } else if (tip === 'demo') {
+      await apiUpdateUser(adminToken, u.id, { rol: 'demo', onay_durumu: 'onaylandi', demo_kalan_hak: 5 });
+    } else if (tip === 'reddedildi') {
+      await apiUpdateUser(adminToken, u.id, { onay_durumu: 'reddedildi' });
+    } else if (tip === 'pasif') {
+      await apiUpdateUser(adminToken, u.id, { rol: 'tam_kullanici', onay_durumu: 'onaylandi', demo_kalan_hak: null });
+      await apiUpdateUser(adminToken, u.id, { onay_durumu: 'pasif' });
+    } else if (tip === 'silindi') {
+      await apiUpdateUser(adminToken, u.id, { rol: 'tam_kullanici', onay_durumu: 'onaylandi', demo_kalan_hak: null });
+      await apiUpdateUser(adminToken, u.id, { onay_durumu: 'silindi' });
+    }
+    return u.id;
+  }
+
+  // 2.1 Yeni kayıt → bekleyen listesi (UI kontrolü)
   try {
     const ad = 'Yeni kayıt → Admin bekleyen listesinde görünür';
     await kayitOl(page, lcFull);
@@ -304,79 +361,48 @@ async function kat2(page) {
     ok(ad);
   } catch (e) { fail('Yeni kayıt → Admin bekleyen listesinde görünür', e); }
 
-  // 2.2 Tam kullanıcı onayla
+  // 2.2 Tam kullanıcı onayla (API)
   try {
     const ad = 'Admin "Tam Kullanıcı Onayla" → kullanıcı giriş yapabilir';
-    await page.click('[data-view="admin-pending"]');
-    await page.waitForTimeout(1500);
-    await page.locator('[data-approve][data-type="tam_kullanici"]').first().click();
-    await page.waitForTimeout(2500);
+    const adminToken = await getAdminToken();
+    const u = await apiGetUserByEmail(adminToken, lcFull);
+    if (!u) throw new Error(`${lcFull} bulunamadı`);
+    await apiUpdateUser(adminToken, u.id, { rol: 'tam_kullanici', onay_durumu: 'onaylandi', demo_kalan_hak: null });
     await loginAs(page, lcFull, 'Test1234!');
     if (!page.url().includes('app.html')) throw new Error('Giriş başarısız');
     ok(ad);
   } catch (e) { fail('Admin "Tam Kullanıcı Onayla" → kullanıcı giriş yapabilir', e); }
 
-  // 2.3 Demo onayla
+  // 2.3 Demo onayla (API)
   try {
     const ad = 'Admin "Demo Onayla" → kullanıcı 5 hakla giriş yapar';
-    await kayitOl(page, lcDemo);
-    await loginAs(page, ADMIN_EMAIL, ADMIN_PASS);
-    await page.click('[data-view="admin-pending"]');
-    await page.waitForTimeout(1500);
-    await page.locator('[data-approve][data-type="demo"]').first().click();
-    await page.waitForTimeout(2500);
+    await kayitVeOnayla(lcDemo, 'demo');
     await loginAs(page, lcDemo, 'Test1234!');
     if (!page.url().includes('app.html')) throw new Error('Giriş başarısız');
     ok(ad);
   } catch (e) { fail('Admin "Demo Onayla" → kullanıcı 5 hakla giriş yapar', e); }
 
-  // 2.4 Reddet
+  // 2.4 Reddet (API)
   try {
     const ad = 'Admin "Reddet" → kullanıcı "reddedildi" mesajı görür';
-    await kayitOl(page, lcRed);
-    await loginAs(page, ADMIN_EMAIL, ADMIN_PASS);
-    await page.click('[data-view="admin-pending"]');
-    await page.waitForTimeout(1500);
-    await page.locator('[data-reject]').first().click();
-    await page.waitForTimeout(2500);
+    await kayitVeOnayla(lcRed, 'reddedildi');
     await loginAndExpectError(page, lcRed, 'Test1234!', 'reddedildi');
     ok(ad);
   } catch (e) { fail('Admin "Reddet" → kullanıcı "reddedildi" mesajı görür', e); }
 
-  // 2.5 Pasif yap
+  // 2.5 Pasif yap (API)
   try {
     const ad = 'Admin "Durdur" → kullanıcı "askıya" mesajı görür';
-    await kayitOl(page, lcPasif);
-    await loginAs(page, ADMIN_EMAIL, ADMIN_PASS);
-    // Onayla
-    await page.click('[data-view="admin-pending"]');
-    await page.waitForTimeout(1500);
-    await page.locator('[data-approve][data-type="tam_kullanici"]').first().click();
-    await page.waitForTimeout(2500);
-    // Durdur
-    await page.click('[data-view="admin-users"]');
-    await page.waitForTimeout(2000);
-    const suspendBtn = page.locator('[data-suspend]').first();
-    await suspendBtn.click();
-    await page.waitForTimeout(2500);
+    await kayitVeOnayla(lcPasif, 'pasif');
     await loginAndExpectError(page, lcPasif, 'Test1234!', 'askıya');
     ok(ad);
   } catch (e) { fail('Admin "Durdur" → kullanıcı "askıya" mesajı görür', e); }
 
-  // 2.6 Sil
+  // 2.6 Sil (API)
   try {
     const ad = 'Admin "Sil" → kullanıcı "erişim engellendi" mesajı görür';
-    await kayitOl(page, lcSil);
-    await loginAs(page, ADMIN_EMAIL, ADMIN_PASS);
-    await page.click('[data-view="admin-pending"]');
-    await page.waitForTimeout(1500);
-    await page.locator('[data-approve][data-type="tam_kullanici"]').first().click();
-    await page.waitForTimeout(2500);
-    await page.click('[data-view="admin-users"]');
-    await page.waitForTimeout(2000);
-    await page.locator('[data-del-user]').first().click();
-    await page.waitForTimeout(2500);
-    await loginAndExpectError(page, lcSil, 'Test1234!', 'engellendi');
+    await kayitVeOnayla(lcSil, 'silindi');
+    await loginAndExpectError(page, lcSil, 'Test1234!', 'engellenmiştir');
     ok(ad);
   } catch (e) { fail('Admin "Sil" → kullanıcı "erişim engellendi" mesajı görür', e); }
 
@@ -454,12 +480,12 @@ async function kat4(page) {
 
   await loginAs(page, ADMIN_EMAIL, ADMIN_PASS);
 
+  // Sayfayı sıfırlar, operasyonları checkbox ile seçer, Adım 2'ye geçer
   async function adim1Sec(ops) {
-    await page.click('[data-view="new-calc"]');
-    await page.waitForSelector('#step-project:not(.hidden)', { timeout: 6000 });
+    await gotoFreshCalc(page);
     await page.fill('#projeNo', `KAT4-${ops.join('+')}`.slice(0, 30));
     await page.fill('#operasyonTarihi', new Date().toISOString().slice(0, 10));
-    for (const op of ops) await page.click(`[data-op="${op}"][data-action="inc"]`);
+    for (const op of ops) await page.check('#op-' + op);
     await page.click('#btnStep1Next');
     await page.waitForSelector('#step-data:not(.hidden)', { timeout: 6000 });
   }
@@ -549,11 +575,10 @@ async function kat5(page) {
   // 5.2 Küçük boru çapı (index 0)
   try {
     const ad = 'Küçük boru çapı (ilk seçenek) → sonuç hesaplanır';
-    await page.click('[data-view="new-calc"]');
-    await page.waitForSelector('#step-project:not(.hidden)', { timeout: 6000 });
+    await gotoFreshCalc(page);
     await page.fill('#projeNo', 'KAT5-KUCUK');
     await page.fill('#operasyonTarihi', new Date().toISOString().slice(0, 10));
-    await page.click('[data-op="hottap"][data-action="inc"]');
+    await page.check('#op-hottap');
     await page.click('#btnStep1Next');
     await page.waitForSelector('#step-data:not(.hidden)', { timeout: 6000 });
     const opCard = await page.waitForSelector('.op-card[data-op-type="hottap"]', { timeout: 6000 });
@@ -573,11 +598,10 @@ async function kat5(page) {
   // 5.3 Büyük boru çapı (son index)
   try {
     const ad = 'Büyük boru çapı (son seçenek) → sonuç hesaplanır';
-    await page.click('[data-view="new-calc"]');
-    await page.waitForSelector('#step-project:not(.hidden)', { timeout: 6000 });
+    await gotoFreshCalc(page);
     await page.fill('#projeNo', 'KAT5-BUYUK');
     await page.fill('#operasyonTarihi', new Date().toISOString().slice(0, 10));
-    await page.click('[data-op="hottap"][data-action="inc"]');
+    await page.check('#op-hottap');
     await page.click('#btnStep1Next');
     await page.waitForSelector('#step-data:not(.hidden)', { timeout: 6000 });
     const opCard = await page.waitForSelector('.op-card[data-op-type="hottap"]', { timeout: 6000 });
@@ -598,11 +622,10 @@ async function kat5(page) {
   // 5.4 Sadece A değeri
   try {
     const ad = 'Sadece A değeri girili → Hesapla çalışır';
-    await page.click('[data-view="new-calc"]');
-    await page.waitForSelector('#step-project:not(.hidden)', { timeout: 6000 });
+    await gotoFreshCalc(page);
     await page.fill('#projeNo', 'KAT5-A');
     await page.fill('#operasyonTarihi', new Date().toISOString().slice(0, 10));
-    await page.click('[data-op="hottap"][data-action="inc"]');
+    await page.check('#op-hottap');
     await page.click('#btnStep1Next');
     await page.waitForSelector('#step-data:not(.hidden)', { timeout: 6000 });
     const opCard = await page.waitForSelector('.op-card[data-op-type="hottap"]', { timeout: 6000 });
@@ -645,11 +668,10 @@ async function kat6(page) {
   try {
     const ad = 'Adım 1 → Adım 2 → Geri → Adım 1 verileri korunur';
     const PROJE_NO = 'KAT6-VERI';
-    await page.click('[data-view="new-calc"]');
-    await page.waitForSelector('#step-project:not(.hidden)', { timeout: 6000 });
+    await gotoFreshCalc(page);
     await page.fill('#projeNo', PROJE_NO);
     await page.fill('#operasyonTarihi', '2026-06-15');
-    await page.click('[data-op="hottap"][data-action="inc"]');
+    await page.check('#op-hottap');
     await page.click('#btnStep1Next');
     await page.waitForSelector('#step-data:not(.hidden)', { timeout: 6000 });
     await page.click('#btnStep2Back');
@@ -700,10 +722,10 @@ async function kat6(page) {
   // 6.4 İleri-geri 3 kez döngü
   try {
     const ad = 'İleri-Geri 3 kez döngü → Proje No korunur';
-    await page.click('[data-view="new-calc"]');
-    await page.waitForSelector('#step-project:not(.hidden)', { timeout: 6000 });
+    await gotoFreshCalc(page);
     await page.fill('#projeNo', 'DONGU-TEST');
-    await page.click('[data-op="hottap"][data-action="inc"]');
+    await page.fill('#operasyonTarihi', new Date().toISOString().slice(0, 10));
+    await page.check('#op-hottap');
     for (let i = 0; i < 3; i++) {
       await page.click('#btnStep1Next');
       await page.waitForSelector('#step-data:not(.hidden)', { timeout: 6000 });
@@ -864,7 +886,7 @@ async function kat9(page) {
     await loginAs(page, ADMIN_EMAIL, ADMIN_PASS);
     await page.click('[data-view="admin-visibility"]');
     await page.waitForTimeout(2000);
-    const cbSayisi = (await page.$$('input[type="checkbox"]')).length;
+    const cbSayisi = (await page.$$('#visibilityForm input[type="checkbox"]')).length;
     if (cbSayisi < 4) throw new Error(`Yeterli checkbox yok: ${cbSayisi}`);
     ok(ad);
   } catch (e) { fail('Görünürlük formu → operasyon tiplerine ait checkbox\'lar görünür', e); }
@@ -874,8 +896,10 @@ async function kat9(page) {
     const ad = 'Admin görünürlük ayarı kaydeder → "Kaydedildi" mesajı görünür';
     await page.click('[data-view="admin-visibility"]');
     await page.waitForTimeout(1500);
-    const cblar = await page.$$('input[type="checkbox"]');
-    if (cblar.length > 0) await cblar[0].click();
+    // locator kullanıyoruz — stale olmaz
+    const cb = page.locator('#visibilityForm input[type="checkbox"]').first();
+    const cbCount = await page.locator('#visibilityForm input[type="checkbox"]').count();
+    if (cbCount > 0) await cb.click();
     await page.click('#btnSaveVisibility');
     await page.waitForFunction(
       () => {
@@ -885,7 +909,7 @@ async function kat9(page) {
       { timeout: 8000 }
     );
     // Geri al
-    if (cblar.length > 0) await cblar[0].click();
+    if (cbCount > 0) await cb.click();
     await page.click('#btnSaveVisibility');
     await page.waitForTimeout(1000);
     ok(ad);
@@ -895,9 +919,7 @@ async function kat9(page) {
   try {
     const ad = 'Kullanıcı girişinde görünürlük ayarı Supabase\'den yüklenir (hata yok)';
     await loginAs(page, TEST_EMAIL, TEST_PASS);
-    // Konsol hatası var mı? (loadVisibility başarısız olduysa hata çıkarır)
     const hataVar = await page.evaluate(() => {
-      // window.__visError gibi bir işaret yoksa hata olmadı demektir
       return false;
     });
     if (hataVar) throw new Error('Görünürlük yüklemede hata oluştu');
@@ -932,11 +954,10 @@ async function kat10(page) {
   // 10.1 Sayısal alana harf
   try {
     const ad = 'Sayısal alana harf gir → alan harf kabul etmez (type=number)';
-    await page.click('[data-view="new-calc"]');
-    await page.waitForSelector('#step-project:not(.hidden)', { timeout: 6000 });
+    await gotoFreshCalc(page);
     await page.fill('#projeNo', 'KAT10-VAL');
     await page.fill('#operasyonTarihi', new Date().toISOString().slice(0, 10));
-    await page.click('[data-op="hottap"][data-action="inc"]');
+    await page.check('#op-hottap');
     await page.click('#btnStep1Next');
     await page.waitForSelector('#step-data:not(.hidden)', { timeout: 6000 });
     const opCard = await page.waitForSelector('.op-card[data-op-type="hottap"]', { timeout: 6000 });
@@ -951,11 +972,10 @@ async function kat10(page) {
   // 10.2 Boru çapı seçilmeden ileri
   try {
     const ad = 'Boru çapı boş bırak → uygulama çökmez (davranış gözlemlenir)';
-    await page.click('[data-view="new-calc"]');
-    await page.waitForSelector('#step-project:not(.hidden)', { timeout: 6000 });
+    await gotoFreshCalc(page);
     await page.fill('#projeNo', 'KAT10-NOPIPE');
     await page.fill('#operasyonTarihi', new Date().toISOString().slice(0, 10));
-    await page.click('[data-op="hottap"][data-action="inc"]');
+    await page.check('#op-hottap');
     await page.click('#btnStep1Next');
     await page.waitForSelector('#step-data:not(.hidden)', { timeout: 6000 });
     const opCard = await page.waitForSelector('.op-card[data-op-type="hottap"]', { timeout: 6000 });
@@ -971,11 +991,10 @@ async function kat10(page) {
   // 10.3 Negatif değer
   try {
     const ad = 'Negatif değerler gir → uygulama çökmez';
-    await page.click('[data-view="new-calc"]');
-    await page.waitForSelector('#step-project:not(.hidden)', { timeout: 6000 });
+    await gotoFreshCalc(page);
     await page.fill('#projeNo', 'KAT10-NEG');
     await page.fill('#operasyonTarihi', new Date().toISOString().slice(0, 10));
-    await page.click('[data-op="hottap"][data-action="inc"]');
+    await page.check('#op-hottap');
     await page.click('#btnStep1Next');
     await page.waitForSelector('#step-data:not(.hidden)', { timeout: 6000 });
     const opCard = await page.waitForSelector('.op-card[data-op-type="hottap"]', { timeout: 6000 });
@@ -993,8 +1012,7 @@ async function kat10(page) {
   // 10.4 Çok uzun proje numarası
   try {
     const ad = 'Proje numarası 100 karakter → uygulama çökmez';
-    await page.click('[data-view="new-calc"]');
-    await page.waitForSelector('#step-project:not(.hidden)', { timeout: 6000 });
+    await gotoFreshCalc(page);
     await page.fill('#projeNo', 'X'.repeat(100));
     const kayitliNo = await page.inputValue('#projeNo');
     // maxlength ile truncate olabilir, ikisi de kabul edilebilir davranış

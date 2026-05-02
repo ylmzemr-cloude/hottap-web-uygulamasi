@@ -1213,7 +1213,7 @@ async function startRevize(calcId, yeniRevizeNo, aciklama) {
   document.getElementById('operasyonTarihi').value  = state.operasyonTarihi;
 
   // Hesaplama sekmesine geç, sonuç adımına götür
-  document.querySelector('.nav-btn[data-view="calculator"]').click();
+  document.querySelector('.nav-btn[data-view="new-calc"]').click();
   buildResultTabs();
   renderActiveTab();
   goToStep(3);
