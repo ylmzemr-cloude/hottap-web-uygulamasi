@@ -1007,6 +1007,7 @@ async function saveCalculation() {
       images:           imageUrls,
       revize_no:        revizeNo,
       revize_aciklama:  state.editingCalc?.revize_aciklama,
+      isAdmin:          currentUser?.profile?.rol === 'admin',
     });
 
     // PDF'i Storage'a yükle
@@ -1201,41 +1202,57 @@ function renderVisibilityForm() {
   if (!formEl) return;
 
   const vis = getVisibility();
+  const COLS = ['summary', 'results', 'pdf_inputs', 'pdf_results'];
+  const COL_LABELS = {
+    summary:     'Ekran\nÖzet',
+    results:     'Ekran\nSonuç',
+    pdf_inputs:  'PDF\nGiriş',
+    pdf_results: 'PDF\nSonuç',
+  };
+
+  const colStyle = 'text-align:center;padding:4px 6px;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.05em;white-space:pre-line;line-height:1.3;';
+  const cellStyle = 'text-align:center;padding:4px 6px;';
+  const labelCellStyle = 'padding:4px 8px;font-size:13px;';
 
   formEl.innerHTML = Object.entries(VISIBILITY_DEFS).map(([opType, def]) => {
-    const opVis = vis[opType] || { summary: [], results: [] };
+    const opVis = vis[opType] || {};
 
-    const summaryRows = def.summary.map(f => `
-      <label style="display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;">
-        <input type="checkbox" data-op="${opType}" data-section="summary" data-key="${f.key}"
-          ${opVis.summary.includes(f.key) ? 'checked' : ''}
-          style="width:16px;height:16px;cursor:pointer;">
-        <span style="font-size:13px;">${f.label}</span>
-      </label>`).join('');
+    const headerRow = `
+      <tr>
+        <th style="${labelCellStyle}font-weight:600;color:#374151;"></th>
+        ${COLS.map(sec => `<th style="${colStyle}">${COL_LABELS[sec]}</th>`).join('')}
+      </tr>`;
 
-    const resultsRows = def.results.map(f => `
-      <label style="display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;">
-        <input type="checkbox" data-op="${opType}" data-section="results" data-key="${f.key}"
-          ${opVis.results.includes(f.key) ? 'checked' : ''}
-          style="width:16px;height:16px;cursor:pointer;">
-        <span style="font-size:13px;">${f.label}</span>
-      </label>`).join('');
+    const rows = def.fields.map(f => {
+      const cells = COLS.map(sec => {
+        if (!f.sections.includes(sec)) {
+          return `<td style="${cellStyle}color:#cbd5e1;">—</td>`;
+        }
+        const checked = (opVis[sec] || []).includes(f.key) ? 'checked' : '';
+        return `<td style="${cellStyle}">
+          <input type="checkbox"
+            data-op="${opType}" data-section="${sec}" data-key="${f.key}"
+            ${checked}
+            style="width:15px;height:15px;cursor:pointer;">
+        </td>`;
+      }).join('');
+
+      const desc = f.description ? `<span style="color:#94a3b8;font-size:11px;margin-left:4px;">(${f.description})</span>` : '';
+      return `<tr style="border-bottom:1px solid #f1f5f9;">
+        <td style="${labelCellStyle}">${f.label}${desc}</td>
+        ${cells}
+      </tr>`;
+    }).join('');
 
     return `
-      <div style="margin-bottom:24px;">
-        <div style="font-weight:700;font-size:15px;margin-bottom:12px;padding-bottom:6px;border-bottom:2px solid #e2e8f0;">
+      <div style="margin-bottom:28px;">
+        <div style="font-weight:700;font-size:15px;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid #e2e8f0;">
           ${def.label}
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 32px;">
-          <div>
-            <div style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Giriş Özeti</div>
-            ${summaryRows}
-          </div>
-          <div>
-            <div style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Hesaplama Sonuçları</div>
-            ${resultsRows}
-          </div>
-        </div>
+        <table style="width:100%;border-collapse:collapse;">
+          <thead>${headerRow}</thead>
+          <tbody>${rows}</tbody>
+        </table>
       </div>`;
   }).join('');
 
@@ -1247,7 +1264,7 @@ async function saveVisibilityFromForm() {
   const newVis = {};
   document.querySelectorAll('#visibilityForm input[type=checkbox]').forEach(cb => {
     const { op, section, key } = cb.dataset;
-    if (!newVis[op]) newVis[op] = { summary: [], results: [] };
+    if (!newVis[op]) newVis[op] = { summary: [], results: [], pdf_inputs: [], pdf_results: [] };
     if (cb.checked) newVis[op][section].push(key);
   });
 
@@ -1624,6 +1641,7 @@ function attachPdfButtons(container) {
             operations:      parsed.operations || [],
             results:         parsed.results || {},
             images:          parsed.images || {},
+            isAdmin:         currentUser?.profile?.rol === 'admin',
           });
         }
       } catch { showToast('PDF indirilemedi.', 'error'); }

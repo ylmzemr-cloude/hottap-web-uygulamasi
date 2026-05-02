@@ -1,82 +1,111 @@
 import { supabase } from './supabase.js';
 
-// ─── Tüm kontrol edilebilir alanların tanımı ────────────────────────────────
+// ─── Section tanımları ────────────────────────────────────────────────────────
+
+export const SECTIONS = ['summary', 'results', 'pdf_inputs', 'pdf_results'];
+export const SECTION_LABELS = {
+  summary:     'Ekran\nÖzet',
+  results:     'Ekran\nSonuç',
+  pdf_inputs:  'PDF\nGiriş',
+  pdf_results: 'PDF\nSonuç',
+};
+
+// ─── Tüm kontrol edilebilir alanlar ──────────────────────────────────────────
+// sections: alanın hangi sütunlarda checkbox göstereceği
+// Giriş alanları → ['summary', 'pdf_inputs']
+// Sonuç alanları → ['results', 'pdf_results']
 
 export const VISIBILITY_DEFS = {
   hottap: {
     label: 'HotTap',
-    summary: [
-      { key: 'pipeOd',     label: 'Pipe OD' },
-      { key: 'cutterOd',   label: 'Cutter OD' },
-      { key: 'cutterWall', label: 'Cutter Et Kalınlığı' },
-      { key: 'a',          label: 'A' },
-      { key: 'b',          label: 'B' },
-      { key: 'ref1',       label: 'Ref1' },
-    ],
-    results: [
-      { key: 'cutterID',      label: 'Cutter ID' },
-      { key: 'c1',            label: 'C1' },
-      { key: 'c',             label: 'C — Kesme Mesafesi' },
-      { key: 'couponFree',    label: 'Coupon Free' },
-      { key: 'catchPosition', label: 'Catch Position' },
-      { key: 'nestingSpace',  label: 'Nesting Space' },
-      { key: 'pilotTemas',    label: 'Lower-in (Pilot Temas)' },
-      { key: 'maxTapping',    label: 'Max Tapping' },
-      { key: 'maxTravel',     label: 'Max Travel' },
+    fields: [
+      { key: 'pipeOd',        label: 'Pipe OD',       description: 'boru dış çapı',              sections: ['summary', 'pdf_inputs'] },
+      { key: 'cutterOd',      label: 'Cutter OD',     description: 'cutter nominal çapı',        sections: ['summary', 'pdf_inputs'] },
+      { key: 'cutterWall',    label: 'Cutter Et',     description: 'duvar kalınlığı',            sections: ['summary', 'pdf_inputs'] },
+      { key: 'a',             label: 'A',             description: 'pilot ucundan adaptöre',     sections: ['summary', 'pdf_inputs'] },
+      { key: 'b',             label: 'B',             description: 'adaptörden vana altına',     sections: ['summary', 'pdf_inputs'] },
+      { key: 'ref1',          label: 'Ref1',          description: 'pilot ucundan cutter yüzeyine', sections: ['summary', 'pdf_inputs'] },
+      { key: 'cutterID',      label: 'Cutter ID',     description: 'cutter iç çapı',            sections: ['results', 'pdf_results'] },
+      { key: 'c1',            label: 'C1',            description: 'pilot temas → boru çıkış',  sections: ['results', 'pdf_results'] },
+      { key: 'c',             label: 'C',             description: 'toplam kesme mesafesi',      sections: ['results', 'pdf_results'] },
+      { key: 'couponFree',    label: 'Coupon Free',   description: 'kupon serbest kalma noktası', sections: ['results', 'pdf_results'] },
+      { key: 'catchPosition', label: 'Catch Position', description: 'U-teli yakalama noktası',  sections: ['results', 'pdf_results'] },
+      { key: 'nestingSpace',  label: 'Nesting Space', description: 'kupon yerleşme alanı',      sections: ['results', 'pdf_results'] },
+      { key: 'pilotTemas',    label: 'Lower-in',      description: 'pilot boruya temas mesafesi', sections: ['results', 'pdf_results'] },
+      { key: 'maxTapping',    label: 'Max Tapping',   description: 'maksimum delme derinliği',  sections: ['results', 'pdf_results'] },
+      { key: 'maxTravel',     label: 'Max Travel',    description: 'maksimum mil hareketi',     sections: ['results', 'pdf_results'] },
     ],
   },
   stopple: {
     label: 'Stopple',
-    summary: [
-      { key: 'linkedHottap', label: 'Bağlı HotTap' },
-      { key: 'pipeOd',       label: 'Pipe OD' },
-      { key: 'd',            label: 'D' },
-      { key: 'ref2',         label: 'Ref2' },
-    ],
-    results: [
-      { key: 'e',                   label: 'E' },
-      { key: 'stoppleOlcusu',       label: 'Total Set (Stopple)' },
-      { key: 'tekerBoruMerkezi',    label: 'Centerline' },
-      { key: 'tekerTemasMesafesi',  label: 'Roller to Bottom' },
+    fields: [
+      { key: 'linkedHottap',        label: 'Bağlı HotTap',  description: 'hangi HotTap ile ilişkili',       sections: ['summary', 'pdf_inputs'] },
+      { key: 'pipeOd',              label: 'Pipe OD',        description: 'boru dış çapı',                  sections: ['summary', 'pdf_inputs'] },
+      { key: 'd',                   label: 'D',              description: 'stopple mil referans ölçüsü',    sections: ['summary', 'pdf_inputs'] },
+      { key: 'ref2',                label: 'Ref2',           description: 'teker referans ölçüsü',          sections: ['summary', 'pdf_inputs'] },
+      { key: 'e',                   label: 'E',              description: 'boru çapından hesaplanan',       sections: ['results', 'pdf_results'] },
+      { key: 'stoppleOlcusu',       label: 'Total Set',      description: 'toplam tıkama mesafesi',         sections: ['results', 'pdf_results'] },
+      { key: 'tekerBoruMerkezi',    label: 'Centerline',     description: 'tekerin boru merkezine',         sections: ['results', 'pdf_results'] },
+      { key: 'tekerTemasMesafesi',  label: 'Roller to Bottom', description: 'tekerin boru tabanına',        sections: ['results', 'pdf_results'] },
     ],
   },
   tapalama: {
     label: 'Tapalama',
-    summary: [
-      { key: 'cutterOd', label: 'Cutter OD' },
-      { key: 'g',        label: 'G' },
-      { key: 'h',        label: 'H' },
-      { key: 'y',        label: 'Y (Yay)' },
-      { key: 'f',        label: 'F (>12" için)' },
-    ],
-    results: [
-      { key: 'tapalama',    label: 'Total Set (Tapalama)' },
-      { key: 'delmeSuresi', label: 'Delme Süresi' },
+    fields: [
+      { key: 'cutterOd',    label: 'Cutter OD',    description: 'tapa gövde çapı',              sections: ['summary', 'pdf_inputs'] },
+      { key: 'g',           label: 'G',            description: 'tapa referans ölçüsü 1',        sections: ['summary', 'pdf_inputs'] },
+      { key: 'h',           label: 'H',            description: 'tapa referans ölçüsü 2',        sections: ['summary', 'pdf_inputs'] },
+      { key: 'y',           label: 'Y — Yay',      description: 'cutter yay baskısı',           sections: ['summary', 'pdf_inputs'] },
+      { key: 'f',           label: 'F',            description: '12" üzeri ek ölçü',            sections: ['summary', 'pdf_inputs'] },
+      { key: 'tapalama',    label: 'Total Set',    description: 'toplam tapalama mesafesi',      sections: ['results', 'pdf_results'] },
+      { key: 'delmeSuresi', label: 'Delme Süresi', description: 'KKM / RPM / feed rate hesabı', sections: ['results', 'pdf_results'] },
     ],
   },
   'geri-alma': {
     label: 'Tapa Geri Alma',
-    summary: [
-      { key: 'cutterOd', label: 'Cutter OD' },
-      { key: 'm',        label: 'M' },
-      { key: 'n',        label: 'N' },
-      { key: 'yay',      label: 'Yay' },
-    ],
-    results: [
-      { key: 'geriAlmaToplam', label: 'Geri Alma — Total Travel' },
+    fields: [
+      { key: 'cutterOd',       label: 'Cutter OD',    description: 'tapa tutma kafası çapı',     sections: ['summary', 'pdf_inputs'] },
+      { key: 'm',              label: 'M',            description: 'vana üstünden tapa tutucuya', sections: ['summary', 'pdf_inputs'] },
+      { key: 'n',              label: 'N',            description: 'vana üstünden tapa yuvasına', sections: ['summary', 'pdf_inputs'] },
+      { key: 'yay',            label: 'Yay',          description: 'yay seyahat mesafesi',        sections: ['summary', 'pdf_inputs'] },
+      { key: 'geriAlmaToplam', label: 'Total Travel', description: 'toplam geri alma mesafesi',   sections: ['results', 'pdf_results'] },
     ],
   },
 };
 
-const DEFAULT_VISIBILITY = Object.fromEntries(
-  Object.entries(VISIBILITY_DEFS).map(([opType, def]) => [
-    opType,
-    {
-      summary: def.summary.map(f => f.key),
-      results: def.results.map(f => f.key),
-    },
-  ])
-);
+// ─── Varsayılan: tüm alanlar tüm section'larda açık ─────────────────────────
+
+function buildDefault() {
+  const def = {};
+  for (const [opType, opDef] of Object.entries(VISIBILITY_DEFS)) {
+    def[opType] = { summary: [], results: [], pdf_inputs: [], pdf_results: [] };
+    for (const field of opDef.fields) {
+      for (const sec of field.sections) {
+        def[opType][sec].push(field.key);
+      }
+    }
+  }
+  return def;
+}
+
+const DEFAULT_VISIBILITY = buildDefault();
+
+// ─── Eksik section'ları varsayılanla tamamla ─────────────────────────────────
+
+function mergeWithDefaults(saved) {
+  const result = {};
+  for (const [opType, def] of Object.entries(DEFAULT_VISIBILITY)) {
+    result[opType] = {
+      summary:     saved[opType]?.summary     ?? def.summary,
+      results:     saved[opType]?.results     ?? def.results,
+      pdf_inputs:  saved[opType]?.pdf_inputs  ?? def.pdf_inputs,
+      pdf_results: saved[opType]?.pdf_results ?? def.pdf_results,
+    };
+  }
+  return result;
+}
+
+// ─── Cache ve API ─────────────────────────────────────────────────────────────
 
 let _cache = null;
 
@@ -87,7 +116,7 @@ export async function loadVisibility() {
       .select('value')
       .eq('key', 'result_visibility')
       .single();
-    _cache = data?.value || DEFAULT_VISIBILITY;
+    _cache = mergeWithDefaults(data?.value || {});
   } catch {
     _cache = DEFAULT_VISIBILITY;
   }

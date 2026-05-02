@@ -1,4 +1,5 @@
 import { mmToInch } from './units.js';
+import { getVisibility } from './settings.js';
 
 // html2pdf.js CDN'den yüklenir (app.html'deki <script> tag'i)
 // window.html2pdf olarak erişilir
@@ -68,7 +69,7 @@ function buildTemplate(data) {
   const operationsHtml = (data.operations || []).map(op => {
     const result = data.results?.[op.id];
     const images = data.images?.[op.id] || [];
-    return buildOperationSection(op, result, images);
+    return buildOperationSection(op, result, images, data.isAdmin);
   }).join('');
 
   return `<!DOCTYPE html>
@@ -128,12 +129,12 @@ ${operationsHtml}
 </html>`;
 }
 
-function buildOperationSection(op, result, images) {
+function buildOperationSection(op, result, images, isAdmin) {
   const typeStr = OP_TYPE_TR[op.type] || op.type;
   const title   = `${typeStr} #${op.index}`;
 
-  const inputsHtml  = buildInputTable(op);
-  const resultsHtml = result ? buildResultsHtml(result) : '<p style="color:#94a3b8;font-size:9pt;">Hesaplama yapılmadı.</p>';
+  const inputsHtml  = buildInputTable(op, isAdmin);
+  const resultsHtml = result ? buildResultsHtml(result, op.type, isAdmin) : '<p style="color:#94a3b8;font-size:9pt;">Hesaplama yapılmadı.</p>';
   const imagesHtml  = images.length ? buildImagesHtml(images) : '';
 
   return `<div class="op-section">
@@ -144,40 +145,42 @@ function buildOperationSection(op, result, images) {
 </div>`;
 }
 
-function buildInputTable(op) {
+function buildInputTable(op, isAdmin) {
   const d = op.data || {};
   const rows = [];
+  const allowed = isAdmin ? null : (getVisibility()[op.type]?.pdf_inputs || []);
+  const show = (key) => isAdmin || (allowed && allowed.includes(key));
 
   if (op.type === 'hottap') {
-    if (d.pipeOdNominalInch)  rows.push(['Pipe OD',       `${d.pipeOdNominalInch}"  (${d.pipeOdMm ?? '—'} mm)`]);
-    if (d.cutterOdNominalInch) rows.push(['Cutter OD',    `${d.cutterOdNominalInch}"  (actual: ${d.cutterOdActualMm ?? '—'} mm)`]);
-    if (d.cutterWallMm != null) rows.push(['Cutter Et',   fmt(d.cutterWallMm) + ' mm']);
-    if (d.aMm != null)         rows.push(['A',            fmtBoth(d.aMm)]);
-    if (d.bMm != null)         rows.push(['B',            fmtBoth(d.bMm)]);
-    if (d.ref1Mm != null)      rows.push(['Ref1',         fmtBoth(d.ref1Mm)]);
-    if (d.kkmInch != null)     rows.push(['KKM',          fmt(d.kkmInch) + '"']);
-    if (d.ts != null)          rows.push(['TS',           d.ts + ' tur']);
+    if (show('pipeOd')    && d.pipeOdNominalInch)   rows.push(['Pipe OD',   `${d.pipeOdNominalInch}"  (${d.pipeOdMm ?? '—'} mm)`]);
+    if (show('cutterOd')  && d.cutterOdNominalInch)  rows.push(['Cutter OD', `${d.cutterOdNominalInch}"  (actual: ${d.cutterOdActualMm ?? '—'} mm)`]);
+    if (show('cutterWall') && d.cutterWallMm != null) rows.push(['Cutter Et', fmt(d.cutterWallMm) + ' mm']);
+    if (show('a')         && d.aMm != null)           rows.push(['A',         fmtBoth(d.aMm)]);
+    if (show('b')         && d.bMm != null)           rows.push(['B',         fmtBoth(d.bMm)]);
+    if (show('ref1')      && d.ref1Mm != null)        rows.push(['Ref1',      fmtBoth(d.ref1Mm)]);
+    if (d.kkmInch != null)  rows.push(['KKM', fmt(d.kkmInch) + '"']);
+    if (d.ts != null)       rows.push(['TS',  d.ts + ' tur']);
   }
 
   if (op.type === 'stopple') {
-    if (d.pipeOdNominalInch)  rows.push(['Pipe OD',  `${d.pipeOdNominalInch}"`]);
-    if (d.dMm != null)        rows.push(['D',        fmtBoth(d.dMm)]);
-    if (d.ref2Mm != null)     rows.push(['Ref2',     fmtBoth(d.ref2Mm)]);
+    if (show('pipeOd') && d.pipeOdNominalInch) rows.push(['Pipe OD', `${d.pipeOdNominalInch}"`]);
+    if (show('d')      && d.dMm != null)        rows.push(['D',      fmtBoth(d.dMm)]);
+    if (show('ref2')   && d.ref2Mm != null)     rows.push(['Ref2',   fmtBoth(d.ref2Mm)]);
   }
 
   if (op.type === 'tapalama') {
-    if (d.cutterOdNominalInch) rows.push(['Cutter OD', `${d.cutterOdNominalInch}"`]);
-    if (d.gMm != null)        rows.push(['G',    fmtBoth(d.gMm)]);
-    if (d.hMm != null)        rows.push(['H',    fmtBoth(d.hMm)]);
-    if (d.springTravelMm != null) rows.push(['Y (yay)', fmtBoth(d.springTravelMm)]);
-    if (d.fMm != null)        rows.push(['F',    fmtBoth(d.fMm)]);
+    if (show('cutterOd') && d.cutterOdNominalInch)   rows.push(['Cutter OD', `${d.cutterOdNominalInch}"`]);
+    if (show('g')        && d.gMm != null)            rows.push(['G',         fmtBoth(d.gMm)]);
+    if (show('h')        && d.hMm != null)            rows.push(['H',         fmtBoth(d.hMm)]);
+    if (show('y')        && d.springTravelMm != null) rows.push(['Y (yay)',   fmtBoth(d.springTravelMm)]);
+    if (show('f')        && d.fMm != null)            rows.push(['F',         fmtBoth(d.fMm)]);
   }
 
   if (op.type === 'geri-alma') {
-    if (d.cutterOdNominalInch) rows.push(['Cutter OD', `${d.cutterOdNominalInch}"`]);
-    if (d.mMm != null)        rows.push(['M',    fmtBoth(d.mMm)]);
-    if (d.nMm != null)        rows.push(['N',    fmtBoth(d.nMm)]);
-    if (d.springTravelMm != null) rows.push(['Yay', fmtBoth(d.springTravelMm)]);
+    if (show('cutterOd') && d.cutterOdNominalInch)   rows.push(['Cutter OD', `${d.cutterOdNominalInch}"`]);
+    if (show('m')        && d.mMm != null)            rows.push(['M',         fmtBoth(d.mMm)]);
+    if (show('n')        && d.nMm != null)            rows.push(['N',         fmtBoth(d.nMm)]);
+    if (show('yay')      && d.springTravelMm != null) rows.push(['Yay',       fmtBoth(d.springTravelMm)]);
   }
 
   if (!rows.length) return '';
@@ -187,13 +190,17 @@ function buildInputTable(op) {
   </table>`;
 }
 
-function buildResultsHtml(result) {
+function buildResultsHtml(result, opType, isAdmin) {
   if (!result.valid) {
     const errMsg = Object.values(result.errors || {}).filter(Boolean).join(', ');
     return `<div class="error-box">Hesaplama hatası: ${esc(errMsg || 'Eksik veri')}</div>`;
   }
 
+  const allowed = isAdmin ? null : (getVisibility()[opType]?.pdf_results || []);
+  const show = (key) => isAdmin || (allowed && allowed.includes(key));
+
   return Object.entries(result.results || {}).map(([key, calc]) => {
+    if (!show(key)) return '';
     if (!calc || typeof calc.result !== 'number') return '';
     const val  = calc.result.toFixed(3);
     const inch = mmToInch(calc.result).toFixed(3);
