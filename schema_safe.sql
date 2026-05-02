@@ -51,7 +51,8 @@ CREATE TABLE IF NOT EXISTS public.pipe_data (
 CREATE TABLE IF NOT EXISTS public.cutter_data (
   id                  serial PRIMARY KEY,
   cutter_nominal_inch decimal NOT NULL,
-  cutter_actual_mm    decimal NOT NULL
+  cutter_actual_mm    decimal NOT NULL,
+  cutter_wall_mm      decimal
 );
 
 CREATE TABLE IF NOT EXISTS public.spring_data (
@@ -167,39 +168,44 @@ CREATE POLICY "admin_write_spring_data"
 INSERT INTO public.pipe_data
   (pipe_od_inch, pipe_od_mm, pipe_wall_mm, pipe_id_mm)
 VALUES
-  (4,  114.3, 4.37, 105.56),
-  (6,  168.3, 4.37, 159.56),
-  (8,  219.1, 4.78, 209.54),
-  (12, 323.8, 5.56, 312.68),
-  (16, 406.4, 6.35, 393.70),
-  (20, 508.0, 7.14, 493.72),
-  (24, 609.6, 7.92, 593.76),
-  (28, 711.2, 9.52, 692.16)
+  (4,   114.30,  4.37, 105.56),
+  (6,   168.30,  4.37, 159.56),
+  (8,   219.10,  4.78, 209.54),
+  (10,  254.00,  5.30, 243.00),
+  (12,  323.80,  5.56, 312.68),
+  (14,  355.60,  6.00, 349.70),
+  (16,  406.40,  6.35, 393.70),
+  (18,  457.20,  7.00, 450.20),
+  (20,  508.00,  7.14, 493.72),
+  (22,  558.80,  7.30, 544.20),
+  (24,  609.60,  7.92, 593.76),
+  (28,  711.20,  9.52, 692.16),
+  (30,  762.00, 11.13, 739.40)
 ON CONFLICT DO NOTHING;
 
 INSERT INTO public.cutter_data
-  (cutter_nominal_inch, cutter_actual_mm)
+  (cutter_nominal_inch, cutter_actual_mm, cutter_wall_mm)
 VALUES
-  (4,  98),
-  (6,  149),
-  (8,  197),
-  (10, 248),
-  (12, 299),
-  (14, 332),
-  (16, 383),
-  (18, 432),
-  (20, 483),
-  (22, 533),
-  (24, 584),
-  (26, 635),
-  (28, 686),
-  (30, 737),
-  (32, 787),
-  (34, 838),
-  (36, 889),
-  (38, 937),
-  (40, 987),
-  (42, 1038)
+  (4,   98,   9.5),
+  (6,   149,  9.5),
+  (8,   197,  9.5),
+  (10,  248,  9.5),
+  (12,  299,  8.0),
+  (14,  332,  8.0),
+  (16,  383,  8.5),
+  (18,  432,  8.5),
+  (20,  483,  9.0),
+  (22,  533,  9.0),
+  (24,  584,  9.0),
+  (26,  635,  9.0),
+  (28,  686, 11.0),
+  (30,  737, 13.0),
+  (32,  787, 13.0),
+  (34,  838, 14.0),
+  (36,  889, 15.0),
+  (38,  937, 16.0),
+  (40,  987, 18.0),
+  (42, 1038, 20.0)
 ON CONFLICT DO NOTHING;
 
 INSERT INTO public.spring_data

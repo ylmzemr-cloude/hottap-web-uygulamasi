@@ -244,6 +244,7 @@ function renderOperationCards() {
     sel.addEventListener('change', () => {
       validateCutterVsPipe(sel);
       updateConditionalFields();
+      autofillCutterWall(sel);
     });
   });
 
@@ -323,6 +324,18 @@ function validateCutterVsPipe(cutterSelect) {
     errEl.textContent = 'Cutter çapı boru çapından büyük olamaz.';
   } else if (errEl) {
     errEl.textContent = '';
+  }
+}
+
+function autofillCutterWall(cutterSelect) {
+  const opId = cutterSelect.closest('.op-card').dataset.opId;
+  const nominal = parseFloat(cutterSelect.value);
+  if (!nominal) return;
+  const row = getAllCutterData().find(r => r.cutter_nominal_inch === nominal);
+  if (!row?.cutter_wall_mm) return;
+  const wallInput = document.getElementById('cutterWall-' + opId);
+  if (wallInput && !wallInput.value) {
+    wallInput.value = row.cutter_wall_mm;
   }
 }
 
