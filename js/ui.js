@@ -1,5 +1,5 @@
 import { getCurrentUser, logoutUser, checkDemoLimit, decrementDemoHak,
-         approveUser, rejectUser, deleteUser, suspendUser, renewDemoHak } from './auth.js';
+         approveUser, rejectUser, deleteUser, suspendUser, renewDemoHak, restoreUser } from './auth.js';
 import { initTables, getAllPipeData, getAllCutterData, getAllSpringData,
          getPipeRow, getCutterRow, getSpringRow } from './tables.js';
 import { runHotTap, runStopple, runTapalama, runGeriAlma, toMm } from './calculator.js';
@@ -413,7 +413,7 @@ function cardHotTap(op, pipeOptions, cutterOptions) {
       <label for="cutterWall-${id}">Cutter Et Kalınlığı ${helpBtn('CutterWall')}</label>
       <small style="display:block;font-size:11px;color:#64748b;margin-bottom:4px;">Sadece mm girilir</small>
       <div class="input-with-unit">
-        <input type="text" inputmode="decimal" id="cutterWall-${id}" class="input-field" placeholder="12.700">
+        <input type="text" inputmode="decimal" id="cutterWall-${id}" class="input-field" placeholder="mm girin">
         <span style="display:flex;align-items:center;padding:0 10px;background:#f1f5f9;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;color:#64748b;">mm</span>
       </div>
       <span class="field-error" id="cutterWall-${id}Err" role="alert"></span>
@@ -1549,9 +1549,10 @@ async function loadAdminUsers(filter) {
     </tr></thead>
     <tbody>
     ${data.map(u => {
-      const canUpgrade = u.rol !== 'tam_kullanici';
+      const canUpgrade = u.rol !== 'tam_kullanici' && u.onay_durumu !== 'silindi';
       const canRenew   = u.rol === 'demo';
       const canSuspend = u.onay_durumu !== 'pasif' && u.onay_durumu !== 'silindi';
+      const canRestore = u.onay_durumu === 'silindi';
       return `<tr>
         <td>${u.ad_soyad}</td>
         <td style="font-size:11px;">${u.email}</td>
@@ -1563,6 +1564,7 @@ async function loadAdminUsers(filter) {
           ${canUpgrade ? `<button class="btn btn--ghost btn--sm" data-upgrade="${u.id}" title="Tam kullanıcıya yükselt">↑ Tam</button>` : ''}
           ${canRenew   ? `<button class="btn btn--ghost btn--sm" data-renew="${u.id}" title="Demo hakkını yenile">↺ Demo</button>` : ''}
           ${canSuspend ? `<button class="btn btn--ghost btn--sm" data-suspend="${u.id}" title="Yetkiyi durdur" style="color:#f59e0b;border-color:#fde68a;">⏸ Durdur</button>` : ''}
+          ${canRestore ? `<button class="btn btn--ghost btn--sm" data-restore="${u.id}" style="color:#16a34a;border-color:#bbf7d0;" title="Geri Getir">↺ Geri Getir</button>` : ''}
           <button class="btn btn--ghost btn--sm" data-del-user="${u.id}" style="color:#dc2626;border-color:#fecaca;" title="Sil">✕ Sil</button>
         </td>
       </tr>`;
@@ -1595,6 +1597,14 @@ async function loadAdminUsers(filter) {
     btn.addEventListener('click', async () => {
       await suspendUser(btn.dataset.suspend);
       showToast('Kullanıcı yetkisi durduruldu.', 'warning');
+      loadAdminUsers();
+    });
+  });
+
+  listEl.querySelectorAll('[data-restore]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      await restoreUser(btn.dataset.restore);
+      showToast('Kullanıcı geri getirildi.', 'success');
       loadAdminUsers();
     });
   });

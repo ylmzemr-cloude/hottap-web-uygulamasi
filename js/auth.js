@@ -194,6 +194,16 @@ export async function deleteUser(userId) {
   if (error) throw error
 }
 
+// Admin: silinen kullanıcıyı tam kullanıcı olarak geri getir
+export async function restoreUser(userId) {
+  const { error } = await supabase
+    .from('users')
+    .update({ onay_durumu: 'onaylandi', rol: 'tam_kullanici' })
+    .eq('id', userId)
+
+  if (error) throw error
+}
+
 // Admin: kullanıcının yetkisini durdur (hesap aktif kalır ama giriş yapamaz)
 export async function suspendUser(userId) {
   const { error } = await supabase
