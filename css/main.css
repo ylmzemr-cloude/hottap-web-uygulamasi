@@ -9,7 +9,7 @@
   --color-warning:      #FCE09B;
   --color-error:        #B2533E;
   --color-bg:           #f7f6f2;
-  --color-card:         #ffffff;
+  --color-card:         #f5fbfa;
   --color-border:       #dcd9d0;
   --color-text:         #1a1614;
   --color-text-muted:   #6b6560;
@@ -212,7 +212,7 @@ a { color: var(--color-primary); }
   border-radius: var(--radius);
   font-size: 15px;
   color: var(--color-text);
-  background: #fff;
+  background: #f5fbfa;
   transition: border-color 0.15s, box-shadow 0.15s;
   outline: none;
   appearance: none;
@@ -262,7 +262,7 @@ a { color: var(--color-primary); }
 
 .unit-toggle__btn {
   padding: 0 12px;
-  background: #fff;
+  background: #f5fbfa;
   border: none;
   font-size: 12px;
   font-weight: 600;
