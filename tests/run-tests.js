@@ -8,6 +8,7 @@ import { runUnitsTests }      from './units.test.js';
 import { runValidationTests } from './validation.test.js';
 import { runIntegrationTests } from './integration.test.js';
 import { runOfflineTests }    from './offline.test.js';
+import { runVisibilityTests } from './visibility.test.js';
 
 const suites = [
   { name: 'Formül Testleri',      run: runFormulaTests },
@@ -15,6 +16,7 @@ const suites = [
   { name: 'Validasyon Testleri',  run: runValidationTests },
   { name: 'Entegrasyon Testleri', run: runIntegrationTests },
   { name: 'Offline Testleri',     run: runOfflineTests },
+  { name: 'Visibility Testleri',  run: runVisibilityTests },
 ];
 
 let totalPassed = 0;

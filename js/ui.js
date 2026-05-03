@@ -381,7 +381,8 @@ function unitToggle(prefix, opId, defaultUnit = 'mm') {
 function inputRow(id, label, placeholder, field, opId, opts = {}) {
   const noteHtml = opts.note ? `<small style="display:block;font-size:11px;color:#64748b;margin-top:2px;">${opts.note}</small>` : '';
   const readOnly = opts.readonly ? 'readonly style="background:#f8fafc;color:#64748b;"' : '';
-  return `<div class="field">
+  const wrapperAttr = opts.wrapperStyle ? ` style="${opts.wrapperStyle}"` : '';
+  return `<div class="field"${wrapperAttr}>
     <label for="${id}">${label} ${helpBtn(field)}</label>
     ${noteHtml}
     <div class="input-with-unit">
@@ -394,22 +395,25 @@ function inputRow(id, label, placeholder, field, opId, opts = {}) {
 
 function cardHotTap(op, pipeOptions, cutterOptions) {
   const id = op.id;
+  const isAdmin = currentUser?.profile?.rol === 'admin';
+  const sv = isAdmin ? null : (getVisibility()['hottap']?.summary || []);
+  const vis = (key) => isAdmin || sv.includes(key) ? '' : 'display:none;';
   return `<div class="card op-card" data-op-id="${id}" data-op-type="hottap">
     <p class="card__title">HotTap #${op.index}</p>
 
-    <div class="field">
+    <div class="field" style="${vis('pipeOd')}">
       <label for="pipeOd-${id}">Pipe OD ${helpBtn('PipeOD')}</label>
       <select id="pipeOd-${id}" class="select-field sel-pipeOd">${pipeOptions}</select>
       <span class="field-error" id="pipeOd-${id}Err" role="alert"></span>
     </div>
 
-    <div class="field">
+    <div class="field" style="${vis('cutterOd')}">
       <label for="cutterOd-${id}">Cutter OD ${helpBtn('CutterOD')}</label>
       <select id="cutterOd-${id}" class="select-field sel-cutterOd" disabled><option value="">— Önce Pipe OD seçin —</option></select>
       <span class="field-error" id="cutterOd-${id}Err" role="alert"></span>
     </div>
 
-    <div class="field">
+    <div class="field" style="${vis('cutterWall')}">
       <label for="cutterWall-${id}">Cutter Et Kalınlığı ${helpBtn('CutterWall')}</label>
       <small style="display:block;font-size:11px;color:#64748b;margin-bottom:4px;">Sadece mm girilir</small>
       <div class="input-with-unit">
@@ -419,9 +423,9 @@ function cardHotTap(op, pipeOptions, cutterOptions) {
       <span class="field-error" id="cutterWall-${id}Err" role="alert"></span>
     </div>
 
-    ${inputRow('fieldA-'+id, 'A', '', 'A', id, { unitToggle: true, note: 'Pilot uç adaptörden dışarı taşıyorsa negatif değer girin' })}
-    ${inputRow('fieldB-'+id, 'B', '', 'B', id, { unitToggle: true })}
-    ${inputRow('fieldRef1-'+id, 'Ref1', '', 'Ref1', id, { unitToggle: true, note: 'Negatif değer alabilir' })}
+    ${inputRow('fieldA-'+id, 'A', '', 'A', id, { unitToggle: true, note: 'Pilot uç adaptörden dışarı taşıyorsa negatif değer girin', wrapperStyle: vis('a') })}
+    ${inputRow('fieldB-'+id, 'B', '', 'B', id, { unitToggle: true, wrapperStyle: vis('b') })}
+    ${inputRow('fieldRef1-'+id, 'Ref1', '', 'Ref1', id, { unitToggle: true, note: 'Negatif değer alabilir', wrapperStyle: vis('ref1') })}
 
     <div class="image-uploader" data-op-id="${id}">
       <div class="image-uploader__previews" id="previews-${id}"></div>
@@ -437,10 +441,13 @@ function cardStopple(op, hottapOps) {
   const id = op.id;
   const hasHotTap = hottapOps.length > 0;
   const pipeOptions = buildPipeOptions();
+  const isAdmin = currentUser?.profile?.rol === 'admin';
+  const sv = isAdmin ? null : (getVisibility()['stopple']?.summary || []);
+  const vis = (key) => isAdmin || sv.includes(key) ? '' : 'display:none;';
 
   const pipeSection = hasHotTap
     ? `<p style="font-size:12px;color:#64748b;margin-bottom:14px;">Pipe OD ve Cutter OD, HotTap operasyonundan otomatik alınır.</p>`
-    : `<div class="field">
+    : `<div class="field" style="${vis('pipeOd')}">
         <label for="stPipeOd-${id}">Pipe OD ${helpBtn('PipeOD')}</label>
         <select id="stPipeOd-${id}" class="select-field sel-stPipeOd">${pipeOptions}</select>
         <small style="display:block;font-size:11px;color:#64748b;margin-top:4px;">Cutter OD = Pipe OD (otomatik)</small>
@@ -452,8 +459,8 @@ function cardStopple(op, hottapOps) {
     <p class="card__title">Stopple — Tıkama</p>
     ${pipeSection}
 
-    ${inputRow('fieldD-'+id, 'D', '', 'D', id, { unitToggle: true })}
-    ${inputRow('fieldRef2-'+id, 'Ref2', '', 'Ref2', id, { unitToggle: true, note: 'Negatif değer alabilir' })}
+    ${inputRow('fieldD-'+id, 'D', '', 'D', id, { unitToggle: true, wrapperStyle: vis('d') })}
+    ${inputRow('fieldRef2-'+id, 'Ref2', '', 'Ref2', id, { unitToggle: true, note: 'Negatif değer alabilir', wrapperStyle: vis('ref2') })}
 
     <div class="image-uploader" data-op-id="${id}">
       <div class="image-uploader__previews" id="previews-${id}"></div>
@@ -468,11 +475,14 @@ function cardStopple(op, hottapOps) {
 function cardTapalama(op, hottapOps, cutterOptions) {
   const id = op.id;
   const hasHotTap = hottapOps.length > 0;
+  const isAdmin = currentUser?.profile?.rol === 'admin';
+  const sv = isAdmin ? null : (getVisibility()['tapalama']?.summary || []);
+  const vis = (key) => isAdmin || sv.includes(key) ? '' : 'display:none;';
 
   // Eğer HotTap varsa cutter oradan otomatik gelir, yoksa kullanıcı seçer
   const cutterSection = hasHotTap
     ? `<p style="font-size:12px;color:#64748b;margin-bottom:14px;">HotTap'taki Cutter OD'ye göre yay otomatik belirlenir.</p>`
-    : `<div class="field">
+    : `<div class="field" style="${vis('cutterOd')}">
         <label for="cutterOd-${id}">Cutter OD ${helpBtn('CutterOD')}</label>
         <select id="cutterOd-${id}" class="select-field sel-cutterOd">${cutterOptions}</select>
         <span class="field-error" id="cutterOd-${id}Err" role="alert"></span>
@@ -483,10 +493,10 @@ function cardTapalama(op, hottapOps, cutterOptions) {
 
     ${cutterSection}
 
-    ${inputRow('fieldG-'+id, 'G', '', 'G', id, { unitToggle: true })}
-    ${inputRow('fieldH-'+id, 'H', '', 'H', id, { unitToggle: true })}
+    ${inputRow('fieldG-'+id, 'G', '', 'G', id, { unitToggle: true, wrapperStyle: vis('g') })}
+    ${inputRow('fieldH-'+id, 'H', '', 'H', id, { unitToggle: true, wrapperStyle: vis('h') })}
 
-    <div id="fField-${id}" class="hidden">
+    <div id="fField-${id}" class="hidden" style="${vis('f')}">
       ${inputRow('fieldF-'+id, 'F  (>12" cutter)', '', 'F', id, { unitToggle: true })}
     </div>
 
@@ -503,10 +513,13 @@ function cardTapalama(op, hottapOps, cutterOptions) {
 function cardGeriAlma(op, cutterOptions, hottapOps) {
   const id = op.id;
   const hasHotTap = hottapOps.length > 0;
+  const isAdmin = currentUser?.profile?.rol === 'admin';
+  const sv = isAdmin ? null : (getVisibility()['geri-alma']?.summary || []);
+  const vis = (key) => isAdmin || sv.includes(key) ? '' : 'display:none;';
 
   const cutterSection = hasHotTap
     ? `<p style="font-size:12px;color:#64748b;margin-bottom:14px;">HotTap'taki Cutter OD'ye göre yay otomatik belirlenir.</p>`
-    : `<div class="field">
+    : `<div class="field" style="${vis('cutterOd')}">
         <label for="cutterOd-${id}">Cutter OD ${helpBtn('CutterOD')}</label>
         <select id="cutterOd-${id}" class="select-field sel-cutterOd">${cutterOptions}</select>
         <span class="field-error" id="cutterOd-${id}Err" role="alert"></span>
@@ -517,10 +530,10 @@ function cardGeriAlma(op, cutterOptions, hottapOps) {
 
     ${cutterSection}
 
-    ${inputRow('fieldM-'+id, 'M', '', 'M', id, { unitToggle: true })}
-    ${inputRow('fieldN-'+id, 'N', '', 'N', id, { unitToggle: true })}
+    ${inputRow('fieldM-'+id, 'M', '', 'M', id, { unitToggle: true, wrapperStyle: vis('m') })}
+    ${inputRow('fieldN-'+id, 'N', '', 'N', id, { unitToggle: true, wrapperStyle: vis('n') })}
 
-    <div id="gaSpringField-${id}" class="hidden">
+    <div id="gaSpringField-${id}" class="hidden" style="${vis('yay')}">
       ${inputRow('fieldGaSpring-'+id, 'Yay (>12" cutter)', '', 'Y', id, { unitToggle: true })}
     </div>
 
