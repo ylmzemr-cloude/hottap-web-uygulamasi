@@ -241,7 +241,6 @@ function renderOperationCards() {
     sel.addEventListener('change', () => {
       validateCutterVsPipe(sel);
       updateConditionalFields();
-      autofillCutterWall(sel);
     });
   });
 

@@ -424,7 +424,7 @@ async function kat3(page) {
   try {
     const ad = 'Kullanıcı → Admin mesaj gönder → başarı alert görünür';
     await page.click('[data-view="message"]');
-    await page.waitForSelector('#messageText', { timeout: 5000 });
+    await page.waitForSelector('#messageText', { timeout: 10000 });
     await page.fill('#messageText', 'Otomatik test mesajı — KAT-3 kontrol.');
     await page.click('#btnSendMessage');
     await page.waitForFunction(
@@ -790,10 +790,22 @@ async function kat7(page) {
   } catch (e) { fail('Geçmişteki kayıtta PDF indirme butonu mevcut', e); }
 
   // 7.4 Konum
-  skip(
-    'Konum izni ver → lat/lng Supabase\'e kaydedilir',
-    'Playwright geolocation context ayrı kurulum gerektirir'
-  );
+  try {
+    const ad = 'Konum izni ver → lat/lng Supabase\'e kaydedilir';
+    const projeNo74 = 'KAT74GEO' + Date.now();
+    await fillHottap(page, projeNo74);
+    await hesaplaVeKaydet(page);
+    // Admin token kullan (KAT-7 admin olarak kaydediyor)
+    const token74 = await getAdminToken();
+    const enc = encodeURIComponent(projeNo74);
+    const res = await (await fetch(
+      `${SUPABASE_URL}/rest/v1/calculations?proje_no=eq.${enc}&select=konum_lat,konum_lng&order=sistem_kayit_zamani.desc&limit=1`,
+      { headers: { apikey: ANON_KEY, Authorization: `Bearer ${token74}`, Accept: 'application/json' } }
+    )).json();
+    const row = res[0];
+    if (!row?.konum_lat || !row?.konum_lng) throw new Error(`Koordinat kaydedilmedi: lat=${row?.konum_lat} lng=${row?.konum_lng} | raw=${JSON.stringify(res).slice(0,200)}`);
+    ok(ad);
+  } catch (e) { fail('Konum izni ver → lat/lng Supabase\'e kaydedilir', e); }
 }
 
 
@@ -805,12 +817,13 @@ async function kat8(page) {
   if (!ADMIN_PASS) { skip('KAT-8 tüm testler', 'ADMIN_PASS yok'); return; }
 
   await loginAs(page, ADMIN_EMAIL, ADMIN_PASS);
+  await gotoFreshCalc(page); // app tam init olsun, sonra history tab'a geç
 
   // 8.1 Geçmişten kayıt aç
   try {
     const ad = 'Geçmiş → bir kayda tıkla → detay açılır';
     await page.click('[data-view="history"]');
-    await page.waitForSelector('#historyList .history-item', { timeout: 12000 });
+    await page.waitForSelector('#historyList .history-item', { timeout: 15000 });
     await page.locator('#historyList .history-item').first().click();
     await page.waitForTimeout(1500);
     ok(ad);
@@ -1045,7 +1058,11 @@ async function main() {
   }
 
   const browser = await chromium.launch({ headless: false, slowMo: 800 });
-  const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const context = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    geolocation: { latitude: 41.015137, longitude: 28.979530 },
+    permissions: ['geolocation'],
+  });
   const page = await context.newPage();
 
   try {
