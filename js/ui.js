@@ -11,6 +11,14 @@ import { initOffline, addPending, updateConnectionStatus } from './offline.js';
 
 // ─── Uygulama Durumu ─────────────────────────────────────────────────────────
 
+function escHtml(str) {
+  return String(str ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 let currentUser = null;
 
 const state = {
@@ -1051,7 +1059,7 @@ async function saveCalculation() {
               revize_aciklama: state.editingCalc?.revize_aciklama,
             },
           },
-        }).catch(() => {});
+        }).catch(err => console.warn('Mail gönderilemedi:', err));
       } else {
         // Online ama Supabase hatası — kuyruğa ekle
         addPending(calcPayload);
@@ -1485,8 +1493,8 @@ async function loadAdminPending() {
 
   listEl.innerHTML = data.map(u => `
     <div class="card" style="margin-bottom:10px;">
-      <p style="font-weight:600;">${u.ad_soyad}</p>
-      <p style="font-size:13px;color:#484340;">${u.email} · ${u.telefon}</p>
+      <p style="font-weight:600;">${escHtml(u.ad_soyad)}</p>
+      <p style="font-size:13px;color:#484340;">${escHtml(u.email)} · ${escHtml(u.telefon)}</p>
       <p style="font-size:12px;color:#595450;margin-top:4px;">${new Date(u.created_at).toLocaleDateString('tr-TR')}</p>
       <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
         <button class="btn btn--success btn--sm" data-approve="${u.id}" data-type="tam_kullanici">Tam Kullanıcı Onayla</button>
@@ -1568,9 +1576,9 @@ async function loadAdminUsers(filter) {
       const canSuspend = u.onay_durumu !== 'pasif' && u.onay_durumu !== 'silindi';
       const canRestore = u.onay_durumu === 'silindi';
       return `<tr>
-        <td>${u.ad_soyad}</td>
-        <td style="font-size:11px;">${u.email}</td>
-        <td style="font-size:12px;">${u.rol || '—'}</td>
+        <td>${escHtml(u.ad_soyad)}</td>
+        <td style="font-size:11px;">${escHtml(u.email)}</td>
+        <td style="font-size:12px;">${escHtml(u.rol || '—')}</td>
         <td><span class="status-badge status-badge--${u.onay_durumu || 'beklemede'}">${u.onay_durumu || '—'}</span></td>
         <td style="text-align:center;">${u.demo_kalan_hak ?? '—'}</td>
         <td style="font-size:11px;">${u.son_giris ? new Date(u.son_giris).toLocaleDateString('tr-TR') : '—'}</td>
@@ -1657,8 +1665,8 @@ async function loadAdminCalcs() {
       : '—';
     return `<tr>
       <td style="font-size:12px;">${c.operasyon_tarihi || '—'}</td>
-      <td>${c.user_display_name || '—'}</td>
-      <td>${c.proje_no || '—'}</td>
+      <td>${escHtml(c.user_display_name || '—')}</td>
+      <td>${escHtml(c.proje_no || '—')}</td>
       <td style="font-size:11px;">${new Date(c.sistem_kayit_zamani).toLocaleString('tr-TR')}</td>
       <td style="text-align:center;">${konum}</td>
       <td><button class="btn btn--ghost btn--sm" data-pdf-calc="${c.id}">⬇ PDF</button></td>

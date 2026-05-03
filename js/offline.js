@@ -58,10 +58,10 @@ export async function syncPending() {
               operasyon_tarihi: item.data.operasyon_tarihi,
             },
           },
-        }).catch(() => {});
+        }).catch(err => console.warn('Offline sync maili gönderilemedi:', err));
       }
-    } catch {
-      // Bir sonraki online event'inde tekrar denenecek
+    } catch (err) {
+      console.warn('Offline sync hatası, sonraki bağlantıda tekrar denenecek:', err);
     }
   }
 
