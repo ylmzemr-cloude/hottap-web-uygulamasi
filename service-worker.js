@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bymey-hottap-v6';
+const CACHE_NAME = 'bymey-hottap-v7';
 
 const PRECACHE_URLS = [
   '/',
@@ -6,7 +6,12 @@ const PRECACHE_URLS = [
   '/app.html',
   '/css/main.css',
   '/css/print.css',
+  '/js/state.js',
   '/js/ui.js',
+  '/js/ui-helpers.js',
+  '/js/ui-calc.js',
+  '/js/ui-history.js',
+  '/js/ui-admin.js',
   '/js/auth.js',
   '/js/calculator.js',
   '/js/formulas.js',
@@ -14,6 +19,7 @@ const PRECACHE_URLS = [
   '/js/validation.js',
   '/js/tables.js',
   '/js/supabase.js',
+  '/js/settings.js',
   '/js/pdf.js',
   '/js/offline.js',
   '/data/help-texts.json',
