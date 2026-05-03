@@ -380,15 +380,15 @@ function unitToggle(prefix, opId, defaultUnit = 'mm') {
 }
 
 function inputRow(id, label, placeholder, field, opId, opts = {}) {
-  const noteHtml = opts.note ? `<small style="display:block;font-size:11px;color:#64748b;margin-top:2px;">${opts.note}</small>` : '';
-  const readOnly = opts.readonly ? 'readonly style="background:#f8fafc;color:#64748b;"' : '';
+  const noteHtml = opts.note ? `<small style="display:block;font-size:11px;color:#6b6560;margin-top:2px;">${opts.note}</small>` : '';
+  const readOnly = opts.readonly ? 'readonly style="background:#f7f6f2;color:#6b6560;"' : '';
   const wrapperAttr = opts.wrapperStyle ? ` style="${opts.wrapperStyle}"` : '';
   return `<div class="field"${wrapperAttr}>
     <label for="${id}">${label} ${helpBtn(field)}</label>
     ${noteHtml}
     <div class="input-with-unit">
       <input type="text" inputmode="decimal" id="${id}" class="input-field" placeholder="${placeholder}" ${readOnly}>
-      ${opts.unitToggle ? unitToggle(field, opId) : `<span class="unit-badge" style="display:flex;align-items:center;padding:0 10px;background:#f1f5f9;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;color:#64748b;">${opts.fixedUnit || 'mm'}</span>`}
+      ${opts.unitToggle ? unitToggle(field, opId) : `<span class="unit-badge" style="display:flex;align-items:center;padding:0 10px;background:#f2f0ed;border:1.5px solid #dcd9d0;border-radius:8px;font-size:13px;color:#6b6560;">${opts.fixedUnit || 'mm'}</span>`}
     </div>
     <span class="field-error" id="${id}Err" role="alert"></span>
   </div>`;
@@ -416,10 +416,10 @@ function cardHotTap(op, pipeOptions, cutterOptions) {
 
     <div class="field" style="${vis('cutterWall')}">
       <label for="cutterWall-${id}">Cutter Et Kalınlığı ${helpBtn('CutterWall')}</label>
-      <small style="display:block;font-size:11px;color:#64748b;margin-bottom:4px;">Sadece mm girilir</small>
+      <small style="display:block;font-size:11px;color:#6b6560;margin-bottom:4px;">Sadece mm girilir</small>
       <div class="input-with-unit">
         <input type="text" inputmode="decimal" id="cutterWall-${id}" class="input-field" placeholder="mm girin">
-        <span style="display:flex;align-items:center;padding:0 10px;background:#f1f5f9;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;color:#64748b;">mm</span>
+        <span style="display:flex;align-items:center;padding:0 10px;background:#f2f0ed;border:1.5px solid #dcd9d0;border-radius:8px;font-size:13px;color:#6b6560;">mm</span>
       </div>
       <span class="field-error" id="cutterWall-${id}Err" role="alert"></span>
     </div>
@@ -447,11 +447,11 @@ function cardStopple(op, hottapOps) {
   const vis = (key) => isAdmin || sv.includes(key) ? '' : 'display:none;';
 
   const pipeSection = hasHotTap
-    ? `<p style="font-size:12px;color:#64748b;margin-bottom:14px;">Pipe OD ve Cutter OD, HotTap operasyonundan otomatik alınır.</p>`
+    ? `<p style="font-size:12px;color:#6b6560;margin-bottom:14px;">Pipe OD ve Cutter OD, HotTap operasyonundan otomatik alınır.</p>`
     : `<div class="field" style="${vis('pipeOd')}">
         <label for="stPipeOd-${id}">Pipe OD ${helpBtn('PipeOD')}</label>
         <select id="stPipeOd-${id}" class="select-field sel-stPipeOd">${pipeOptions}</select>
-        <small style="display:block;font-size:11px;color:#64748b;margin-top:4px;">Cutter OD = Pipe OD (otomatik)</small>
+        <small style="display:block;font-size:11px;color:#6b6560;margin-top:4px;">Cutter OD = Pipe OD (otomatik)</small>
         <span class="field-error" id="stPipeOd-${id}Err" role="alert"></span>
       </div>
       ${inputRow('fieldStB-'+id, 'B', '', 'B', id, { unitToggle: true, note: 'Adaptörden vana altına' })}`;
@@ -482,7 +482,7 @@ function cardTapalama(op, hottapOps, cutterOptions) {
 
   // Eğer HotTap varsa cutter oradan otomatik gelir, yoksa kullanıcı seçer
   const cutterSection = hasHotTap
-    ? `<p style="font-size:12px;color:#64748b;margin-bottom:14px;">HotTap'taki Cutter OD'ye göre yay otomatik belirlenir.</p>`
+    ? `<p style="font-size:12px;color:#6b6560;margin-bottom:14px;">HotTap'taki Cutter OD'ye göre yay otomatik belirlenir.</p>`
     : `<div class="field" style="${vis('cutterOd')}">
         <label for="cutterOd-${id}">Cutter OD ${helpBtn('CutterOD')}</label>
         <select id="cutterOd-${id}" class="select-field sel-cutterOd">${cutterOptions}</select>
@@ -519,7 +519,7 @@ function cardGeriAlma(op, cutterOptions, hottapOps) {
   const vis = (key) => isAdmin || sv.includes(key) ? '' : 'display:none;';
 
   const cutterSection = hasHotTap
-    ? `<p style="font-size:12px;color:#64748b;margin-bottom:14px;">HotTap'taki Cutter OD'ye göre yay otomatik belirlenir.</p>`
+    ? `<p style="font-size:12px;color:#6b6560;margin-bottom:14px;">HotTap'taki Cutter OD'ye göre yay otomatik belirlenir.</p>`
     : `<div class="field" style="${vis('cutterOd')}">
         <label for="cutterOd-${id}">Cutter OD ${helpBtn('CutterOD')}</label>
         <select id="cutterOd-${id}" class="select-field sel-cutterOd">${cutterOptions}</select>
@@ -783,7 +783,7 @@ function renderSummaryPage() {
   const operationBlocks = state.operations.map(op => {
     const r = state.results[op.id];
     if (!r?.valid) {
-      return `<div class="card" style="border-left:4px solid #f59e0b;">
+      return `<div class="card" style="border-left:4px solid #FCE09B;">
         <p class="card__title">${TYPE_LABEL[op.type]}</p>
         <div class="alert alert--warning">Hesap eksik veya hatalı.</div>
       </div>`;
@@ -807,7 +807,7 @@ function renderSummaryPage() {
 
   return `<div class="card">
     <p class="card__title">Tüm Sonuçlar</p>
-    <p style="font-size:13px;color:#64748b;">Aşağıdaki sonuçlar PDF olarak kaydedilecek.</p>
+    <p style="font-size:13px;color:#6b6560;">Aşağıdaki sonuçlar PDF olarak kaydedilecek.</p>
     ${allDone ? '' : '<div class="alert alert--warning">Bazı operasyonlarda eksik hesap var. Lütfen önceki sayfalardan tamamlayın.</div>'}
   </div>
   ${operationBlocks}`;
@@ -916,7 +916,7 @@ function renderCalcResults(result, opType) {
     const title = RESULT_LABELS[key] || key;
     const formula = RESULT_FORMULAS[key];
     const formulaHtml = formula
-      ? `<div style="font-size:11px;color:#64748b;margin-top:3px;font-family:monospace;">${formula}</div>`
+      ? `<div style="font-size:11px;color:#6b6560;margin-top:3px;font-family:monospace;">${formula}</div>`
       : '';
     const helpHtml = helpTexts[key]
       ? `<button type="button" class="help-btn" data-field="${key}" aria-label="${key} yardım" style="margin-left:4px;">?</button>`
@@ -928,7 +928,7 @@ function renderCalcResults(result, opType) {
     </details>` : '';
     return `<div class="result-block">
       <div class="result-block__title">${title}${helpHtml}</div>
-      <div class="result-block__value">${val} <span style="font-size:14px;color:#64748b;">mm</span></div>
+      <div class="result-block__value">${val} <span style="font-size:14px;color:#6b6560;">mm</span></div>
       <div class="result-block__value-sub">${valInch}"</div>
       ${formulaHtml}
       ${stepsBlock}
@@ -1118,7 +1118,7 @@ async function saveCalculation() {
 
 async function loadHistory() {
   const listEl = document.getElementById('historyList');
-  listEl.innerHTML = '<div style="text-align:center;padding:20px;color:#64748b;">Yükleniyor...</div>';
+  listEl.innerHTML = '<div style="text-align:center;padding:20px;color:#6b6560;">Yükleniyor...</div>';
 
   const { data, error } = await supabase
     .from('calculations')
@@ -1137,7 +1137,7 @@ async function loadHistory() {
 
   listEl.innerHTML = data.map(c => {
     const revNo = c.revize_no || 1;
-    const revBadge = revNo > 1 ? ` <span style="display:inline-block;background:#dc2626;color:#fff;font-size:10px;padding:1px 5px;border-radius:4px;vertical-align:middle;">R${revNo}</span>` : '';
+    const revBadge = revNo > 1 ? ` <span style="display:inline-block;background:#B2533E;color:#fff;font-size:10px;padding:1px 5px;border-radius:4px;vertical-align:middle;">R${revNo}</span>` : '';
     const pdfBtn = c.pdf_storage_path
       ? `<button class="btn btn--sm" data-dl-pdf="${c.id}" data-pdf-path="${c.pdf_storage_path}" style="font-size:11px;padding:4px 8px;">PDF</button>`
       : '';
@@ -1278,7 +1278,7 @@ function renderVisibilityForm() {
     pdf_results: 'PDF\nSonuç',
   };
 
-  const colStyle = 'text-align:center;padding:4px 6px;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.05em;white-space:pre-line;line-height:1.3;';
+  const colStyle = 'text-align:center;padding:4px 6px;font-size:11px;font-weight:600;color:#6b6560;text-transform:uppercase;letter-spacing:.05em;white-space:pre-line;line-height:1.3;';
   const cellStyle = 'text-align:center;padding:4px 6px;';
   const labelCellStyle = 'padding:4px 8px;font-size:13px;';
 
@@ -1287,7 +1287,7 @@ function renderVisibilityForm() {
 
     const headerRow = `
       <tr>
-        <th style="${labelCellStyle}font-weight:600;color:#374151;"></th>
+        <th style="${labelCellStyle}font-weight:600;color:#1a1614;"></th>
         ${COLS.map(sec => `<th style="${colStyle}">${COL_LABELS[sec]}</th>`).join('')}
       </tr>`;
 
@@ -1302,8 +1302,8 @@ function renderVisibilityForm() {
         </td>`;
       }).join('');
 
-      const desc = f.description ? `<span style="color:#94a3b8;font-size:11px;margin-left:4px;">(${f.description})</span>` : '';
-      return `<tr style="border-bottom:1px solid #f1f5f9;">
+      const desc = f.description ? `<span style="color:#9b928c;font-size:11px;margin-left:4px;">(${f.description})</span>` : '';
+      return `<tr style="border-bottom:1px solid #f2f0ed;">
         <td style="${labelCellStyle}">${f.label}${desc}</td>
         ${cells}
       </tr>`;
@@ -1311,7 +1311,7 @@ function renderVisibilityForm() {
 
     return `
       <div style="margin-bottom:28px;">
-        <div style="font-weight:700;font-size:15px;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid #e2e8f0;">
+        <div style="font-weight:700;font-size:15px;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid #dcd9d0;">
           ${def.label}
         </div>
         <table style="width:100%;border-collapse:collapse;">
@@ -1340,7 +1340,7 @@ async function saveVisibilityFromForm() {
 
   const msg = document.getElementById('visibilitySaveMsg');
   msg.textContent = ok ? 'Kaydedildi.' : 'Kayıt başarısız.';
-  msg.style.color = ok ? '#16a34a' : '#dc2626';
+  msg.style.color = ok ? '#186F65' : '#B2533E';
   msg.style.display = 'inline';
   setTimeout(() => { msg.style.display = 'none'; }, 3000);
 }
@@ -1400,8 +1400,8 @@ function setupOpSure() {
     if (m === '1200') {
       feedInput.value = '0.004';
       feedInput.readOnly = true;
-      feedInput.style.background = '#f8fafc';
-      feedInput.style.color = '#64748b';
+      feedInput.style.background = '#f7f6f2';
+      feedInput.style.color = '#6b6560';
       feedNote.textContent = '1200 serisi için sabit 0.004"/dev — değiştirilemez';
     } else {
       feedInput.value = '';
@@ -1486,8 +1486,8 @@ async function loadAdminPending() {
   listEl.innerHTML = data.map(u => `
     <div class="card" style="margin-bottom:10px;">
       <p style="font-weight:600;">${u.ad_soyad}</p>
-      <p style="font-size:13px;color:#64748b;">${u.email} · ${u.telefon}</p>
-      <p style="font-size:12px;color:#94a3b8;margin-top:4px;">${new Date(u.created_at).toLocaleDateString('tr-TR')}</p>
+      <p style="font-size:13px;color:#6b6560;">${u.email} · ${u.telefon}</p>
+      <p style="font-size:12px;color:#9b928c;margin-top:4px;">${new Date(u.created_at).toLocaleDateString('tr-TR')}</p>
       <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
         <button class="btn btn--success btn--sm" data-approve="${u.id}" data-type="tam_kullanici">Tam Kullanıcı Onayla</button>
         <button class="btn btn--ghost btn--sm" data-approve="${u.id}" data-type="demo">Demo Onayla</button>
@@ -1551,7 +1551,7 @@ async function loadAdminUsers(filter) {
   const { data } = await query;
 
   if (!data?.length) {
-    listEl.innerHTML = filterHtml + '<p style="color:#64748b;font-size:13px;">Kullanıcı bulunamadı.</p>';
+    listEl.innerHTML = filterHtml + '<p style="color:#6b6560;font-size:13px;">Kullanıcı bulunamadı.</p>';
     listEl.querySelectorAll('[data-user-filter]').forEach(b =>
       b.addEventListener('click', () => loadAdminUsers(b.dataset.userFilter)));
     return;
@@ -1577,9 +1577,9 @@ async function loadAdminUsers(filter) {
         <td style="display:flex;gap:4px;flex-wrap:wrap;min-width:160px;">
           ${canUpgrade ? `<button class="btn btn--ghost btn--sm" data-upgrade="${u.id}" title="Tam kullanıcıya yükselt">↑ Tam</button>` : ''}
           ${canRenew   ? `<button class="btn btn--ghost btn--sm" data-renew="${u.id}" title="Demo hakkını yenile">↺ Demo</button>` : ''}
-          ${canSuspend ? `<button class="btn btn--ghost btn--sm" data-suspend="${u.id}" title="Yetkiyi durdur" style="color:#f59e0b;border-color:#fde68a;">⏸ Durdur</button>` : ''}
-          ${canRestore ? `<button class="btn btn--ghost btn--sm" data-restore="${u.id}" style="color:#16a34a;border-color:#bbf7d0;" title="Geri Getir">↺ Geri Getir</button>` : ''}
-          <button class="btn btn--ghost btn--sm" data-del-user="${u.id}" style="color:#dc2626;border-color:#fecaca;" title="Sil">✕ Sil</button>
+          ${canSuspend ? `<button class="btn btn--ghost btn--sm" data-suspend="${u.id}" title="Yetkiyi durdur" style="color:#7a5c12;border-color:#FCE09B;">⏸ Durdur</button>` : ''}
+          ${canRestore ? `<button class="btn btn--ghost btn--sm" data-restore="${u.id}" style="color:#186F65;border-color:#a3d4cf;" title="Geri Getir">↺ Geri Getir</button>` : ''}
+          <button class="btn btn--ghost btn--sm" data-del-user="${u.id}" style="color:#B2533E;border-color:#dba898;" title="Sil">✕ Sil</button>
         </td>
       </tr>`;
     }).join('')}
@@ -1639,7 +1639,7 @@ async function loadAdminCalcs() {
   const listEl = document.getElementById('calcsList');
   if (!listEl) return;
 
-  listEl.innerHTML = '<div style="text-align:center;padding:20px;color:#64748b;">Yükleniyor...</div>';
+  listEl.innerHTML = '<div style="text-align:center;padding:20px;color:#6b6560;">Yükleniyor...</div>';
 
   const { data } = await supabase.from('calculations')
     .select('id, proje_no, operasyon_tarihi, user_display_name, sistem_kayit_zamani, konum_lat, konum_lng')
@@ -1666,7 +1666,7 @@ async function loadAdminCalcs() {
   }
 
   function renderTable(rows) {
-    if (!rows.length) return '<p style="color:#64748b;font-size:13px;">Eşleşen kayıt yok.</p>';
+    if (!rows.length) return '<p style="color:#6b6560;font-size:13px;">Eşleşen kayıt yok.</p>';
     return `<div style="overflow-x:auto;"><table class="admin-table">
       <thead><tr>
         <th>Tarih</th><th>Kullanıcı</th><th>Proje No</th><th>Kayıt Zamanı</th><th>Konum</th><th>PDF</th>
@@ -1693,7 +1693,7 @@ async function loadAdminCalcs() {
     if (!tbody) return;
     tbody.innerHTML = filtered.length
       ? filtered.map(buildRow).join('')
-      : `<tr><td colspan="6" style="text-align:center;color:#64748b;">Eşleşen kayıt yok.</td></tr>`;
+      : `<tr><td colspan="6" style="text-align:center;color:#6b6560;">Eşleşen kayıt yok.</td></tr>`;
     attachPdfButtons(tbody);
   });
 }

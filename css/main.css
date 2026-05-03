@@ -2,19 +2,19 @@
 
 /* ─── Tasarım Değişkenleri ───────────────────────────────────────────────── */
 :root {
-  --color-primary:      #1e40af;
-  --color-primary-dark: #1e3a8a;
-  --color-secondary:    #f59e0b;
-  --color-success:      #16a34a;
-  --color-warning:      #f59e0b;
-  --color-error:        #dc2626;
-  --color-bg:           #f8fafc;
+  --color-primary:      #186F65;
+  --color-primary-dark: #104f47;
+  --color-secondary:    #B5CB99;
+  --color-success:      #186F65;
+  --color-warning:      #FCE09B;
+  --color-error:        #B2533E;
+  --color-bg:           #f7f6f2;
   --color-card:         #ffffff;
-  --color-border:       #e2e8f0;
-  --color-text:         #0f172a;
-  --color-text-muted:   #64748b;
-  --color-result:       #16a34a;
-  --color-demo-badge:   #7c3aed;
+  --color-border:       #dcd9d0;
+  --color-text:         #1a1614;
+  --color-text-muted:   #6b6560;
+  --color-result:       #186F65;
+  --color-demo-badge:   #B2533E;
 
   --radius: 8px;
   --radius-lg: 12px;
@@ -95,13 +95,13 @@ a { color: var(--color-primary); }
   border-radius: 20px;
   white-space: nowrap;
 }
-.status-indicator--online  { background: rgba(22,163,74,0.20); color: #86efac; }
-.status-indicator--offline { background: rgba(220,38,38,0.20); color: #fca5a5; }
+.status-indicator--online  { background: rgba(24,111,101,0.25); color: #8dd4cc; }
+.status-indicator--offline { background: rgba(178,83,62,0.25); color: #e8a898; }
 
 /* ─── Demo Rozet ─────────────────────────────────────────────────────────── */
 .demo-banner {
-  background: #f5f3ff;
-  border-bottom: 1px solid #ddd6fe;
+  background: #f0f9f8;
+  border-bottom: 1px solid #b0d8d3;
   color: var(--color-demo-badge);
   text-align: center;
   font-size: 13px;
@@ -109,8 +109,8 @@ a { color: var(--color-primary); }
   padding: 8px 16px;
 }
 .demo-banner strong { font-weight: 700; }
-.demo-banner--warning { background: #fff7ed; border-color: #fed7aa; color: #c2410c; }
-.demo-banner--exhausted { background: #fef2f2; border-color: #fecaca; color: var(--color-error); }
+.demo-banner--warning { background: #fef9ee; border-color: #FCE09B; color: #7a5c12; }
+.demo-banner--exhausted { background: #fdf3f0; border-color: #dba898; color: var(--color-error); }
 
 /* ─── Navigasyon ─────────────────────────────────────────────────────────── */
 .app-nav {
@@ -228,12 +228,12 @@ a { color: var(--color-primary); }
 
 .input-field:focus, .select-field:focus {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(30,64,175,0.10);
+  box-shadow: 0 0 0 3px rgba(24,111,101,0.12);
 }
 
 .input-field.input--error, .select-field.select--error {
   border-color: var(--color-error);
-  box-shadow: 0 0 0 3px rgba(220,38,38,0.08);
+  box-shadow: 0 0 0 3px rgba(178,83,62,0.10);
 }
 
 .field-error {
@@ -349,7 +349,7 @@ a { color: var(--color-primary); }
 .op-checkbox input[type="checkbox"] {
   width: 22px;
   height: 22px;
-  accent-color: var(--color-primary, #1e40af);
+  accent-color: var(--color-primary, #186F65);
   cursor: pointer;
 }
 .op-checkbox__label {
@@ -359,7 +359,7 @@ a { color: var(--color-primary); }
 }
 .op-checkbox__note {
   font-size: 11px;
-  color: #64748b;
+  color: var(--color-text-muted);
   font-style: italic;
 }
 
@@ -444,8 +444,8 @@ a { color: var(--color-primary); }
 
 /* ─── Sonuç Kutusu ───────────────────────────────────────────────────────── */
 .result-block {
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
+  background: #f0f9f8;
+  border: 1px solid #a3d4cf;
   border-radius: var(--radius);
   padding: 14px;
   margin-bottom: 10px;
@@ -514,10 +514,10 @@ a { color: var(--color-primary); }
   align-items: flex-start;
   gap: 8px;
 }
-.alert--error   { background: #fef2f2; color: var(--color-error); border: 1px solid #fecaca; }
-.alert--success { background: #f0fdf4; color: var(--color-success); border: 1px solid #bbf7d0; }
-.alert--warning { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
-.alert--info    { background: #eff6ff; color: var(--color-primary); border: 1px solid #bfdbfe; }
+.alert--error   { background: #fdf3f0; color: var(--color-error); border: 1px solid #dba898; }
+.alert--success { background: #f0f9f8; color: var(--color-success); border: 1px solid #a3d4cf; }
+.alert--warning { background: #fef9ee; color: #7a5c12; border: 1px solid #FCE09B; }
+.alert--info    { background: #f0f9f8; color: var(--color-primary); border: 1px solid #a3d4cf; }
 
 /* ─── Özet listesi (sayfa sayfa akış) ─────────────────────────────────── */
 .summary-list { display: flex; flex-direction: column; gap: 6px; }
@@ -526,11 +526,11 @@ a { color: var(--color-primary); }
   justify-content: space-between;
   align-items: baseline;
   padding: 6px 0;
-  border-bottom: 1px dashed #e2e8f0;
+  border-bottom: 1px dashed var(--color-border);
 }
 .summary-row:last-child { border-bottom: none; }
-.summary-row__label { font-size: 13px; color: #64748b; }
-.summary-row__val { font-size: 14px; font-weight: 600; color: #1e293b; }
+.summary-row__label { font-size: 13px; color: var(--color-text-muted); }
+.summary-row__val { font-size: 14px; font-weight: 600; color: var(--color-text); }
 
 /* ─── Hesap adımları katlama ──────────────────────────────────────────── */
 .result-steps {
@@ -539,12 +539,12 @@ a { color: var(--color-primary); }
 }
 .result-steps summary {
   cursor: pointer;
-  color: #64748b;
+  color: var(--color-text-muted);
   padding: 4px 0;
   user-select: none;
 }
-.result-steps summary:hover { color: #1e40af; }
-.result-steps[open] summary { color: #1e40af; font-weight: 500; }
+.result-steps summary:hover { color: var(--color-primary); }
+.result-steps[open] summary { color: var(--color-primary); font-weight: 500; }
 
 /* ─── Toast Bildirimi ────────────────────────────────────────────────────── */
 .toast-container {
@@ -735,11 +735,11 @@ a { color: var(--color-primary); }
   font-size: 11px;
   font-weight: 600;
 }
-.status-badge--beklemede  { background: #fef3c7; color: #92400e; }
-.status-badge--onaylandi  { background: #dcfce7; color: #166534; }
-.status-badge--reddedildi { background: #fee2e2; color: #991b1b; }
-.status-badge--silindi    { background: #f1f5f9; color: #64748b; }
-.status-badge--pasif      { background: #f1f5f9; color: #64748b; }
+.status-badge--beklemede  { background: #fef9ee; color: #7a5c12; }
+.status-badge--onaylandi  { background: #f0f9f8; color: #186F65; }
+.status-badge--reddedildi { background: #fdf3f0; color: #8c3a27; }
+.status-badge--silindi    { background: #f2f0ed; color: #6b6560; }
+.status-badge--pasif      { background: #f2f0ed; color: #6b6560; }
 
 /* ─── Resim Yükleme ──────────────────────────────────────────────────────── */
 .image-uploader { margin-top: 14px; }

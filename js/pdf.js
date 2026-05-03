@@ -80,38 +80,38 @@ function buildTemplate(data) {
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; color: #1a1a1a; }
 
-  .pdf-header { border-bottom: 2px solid #1e40af; padding-bottom: 10px; margin-bottom: 14px; }
-  .pdf-title  { font-size: 16pt; font-weight: bold; color: #1e40af; }
+  .pdf-header { border-bottom: 2px solid #186F65; padding-bottom: 10px; margin-bottom: 14px; }
+  .pdf-title  { font-size: 16pt; font-weight: bold; color: #186F65; }
   .pdf-meta   { font-size: 9pt; color: #444; margin-top: 4px; display: flex; gap: 20px; flex-wrap: wrap; }
 
-  .op-section { border: 1px solid #d1d5db; border-radius: 6px; padding: 12px; margin-bottom: 12px; page-break-inside: avoid; }
-  .op-title   { font-size: 12pt; font-weight: bold; color: #1e40af; border-bottom: 1px solid #e5e7eb; padding-bottom: 6px; margin-bottom: 10px; }
+  .op-section { border: 1px solid #cbc8be; border-radius: 6px; padding: 12px; margin-bottom: 12px; page-break-inside: avoid; }
+  .op-title   { font-size: 12pt; font-weight: bold; color: #186F65; border-bottom: 1px solid #dcd9d0; padding-bottom: 6px; margin-bottom: 10px; }
 
   .data-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 9pt; }
-  .data-table td { padding: 3px 6px; border: 1px solid #e5e7eb; }
-  .data-table td:first-child { font-weight: bold; background: #f8fafc; width: 35%; }
+  .data-table td { padding: 3px 6px; border: 1px solid #dcd9d0; }
+  .data-table td:first-child { font-weight: bold; background: #f7f6f2; width: 35%; }
 
-  .result-block { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 4px; padding: 8px 10px; margin-bottom: 8px; page-break-inside: avoid; }
-  .result-title { font-weight: bold; color: #166534; font-size: 9pt; margin-bottom: 4px; }
+  .result-block { background: #f0f9f8; border: 1px solid #a3d4cf; border-radius: 4px; padding: 8px 10px; margin-bottom: 8px; page-break-inside: avoid; }
+  .result-title { font-weight: bold; color: #186F65; font-size: 9pt; margin-bottom: 4px; }
   .result-value { font-size: 13pt; font-weight: bold; font-family: 'Courier New', monospace; }
   .result-inch  { font-size: 9pt; color: #555; font-family: 'Courier New', monospace; }
 
   .steps { margin-top: 5px; font-size: 8pt; color: #555; line-height: 1.6; }
-  .steps li { list-style: none; border-top: 1px solid #e5e7eb; padding: 2px 0; }
+  .steps li { list-style: none; border-top: 1px solid #dcd9d0; padding: 2px 0; }
   .steps li:first-child { border-top: none; }
 
   .images-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
-  .images-grid img { width: 120px; height: 90px; object-fit: cover; border-radius: 4px; border: 1px solid #d1d5db; }
+  .images-grid img { width: 120px; height: 90px; object-fit: cover; border-radius: 4px; border: 1px solid #cbc8be; }
 
-  .error-box { background: #fef2f2; border: 1px solid #fecaca; border-radius: 4px; padding: 8px; color: #991b1b; font-size: 9pt; }
+  .error-box { background: #fdf3f0; border: 1px solid #dba898; border-radius: 4px; padding: 8px; color: #8c3a27; font-size: 9pt; }
 
-  .footer { margin-top: 16px; padding-top: 8px; border-top: 1px solid #e5e7eb; font-size: 8pt; color: #94a3b8; text-align: center; }
+  .footer { margin-top: 16px; padding-top: 8px; border-top: 1px solid #dcd9d0; font-size: 8pt; color: #94a3b8; text-align: center; }
 </style>
 </head>
 <body>
 
 <div class="pdf-header">
-  <div class="pdf-title">ByMEY HotTap Ölçüm Kartı${data.revize_no && data.revize_no > 1 ? ` <span style="font-size:11pt;color:#dc2626;">— Revize ${data.revize_no}</span>` : ''}</div>
+  <div class="pdf-title">ByMEY HotTap Ölçüm Kartı${data.revize_no && data.revize_no > 1 ? ` <span style="font-size:11pt;color:#B2533E;">— Revize ${data.revize_no}</span>` : ''}</div>
   <div class="pdf-meta">
     <span><b>Proje No:</b> ${esc(data.projeNo || '—')}</span>
     <span><b>Tarih:</b> ${tarihStr}</span>
@@ -119,7 +119,7 @@ function buildTemplate(data) {
     <span><b>Revize:</b> ${data.revize_no || 1}</span>
     <span><b>Oluşturulma:</b> ${new Date().toLocaleString('tr-TR')}</span>
   </div>
-  ${data.revize_aciklama ? `<div style="margin-top:6px;padding:6px;background:#fef3c7;border-radius:4px;font-size:9pt;"><b>Revize Açıklaması:</b> ${esc(data.revize_aciklama)}</div>` : ''}
+  ${data.revize_aciklama ? `<div style="margin-top:6px;padding:6px;background:#fef9ee;border-radius:4px;font-size:9pt;"><b>Revize Açıklaması:</b> ${esc(data.revize_aciklama)}</div>` : ''}
 </div>
 
 ${operationsHtml}
