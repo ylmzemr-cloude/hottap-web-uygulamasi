@@ -85,9 +85,9 @@
   },
   "yay": {
     "title": "Yay Seyahati (Spring Travel)",
-    "text": "Cutter mekanizmasındaki yayın serbest seyahat mesafesi. 12 inç ve altı cutter için tablodan otomatik gelir.",
-    "unit": "mm (tablodan otomatik)",
-    "note": "12 inç üzeri cutter için bu değer yoktur; bunun yerine F girilir.",
+    "text": "Tapa geri alma operasyonunda, tapanın tapa tutucuya (plug holder) tam oturmasını ve kilitlenmesini sağlamak için kullanılan yay baskısı mesafesi. Genellikle 3/4\" veya 1\" değerindedir; küçük çaplarda tablodan otomatik gelir.",
+    "unit": "inç (tablodan otomatik)",
+    "note": "12 inç üzeri operasyonlarda bu değer yoktur; bunun yerine F girilir.",
     "image": "olcu_Y.png"
   },
   "f": {
