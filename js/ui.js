@@ -236,11 +236,12 @@ function renderOperationCards() {
     });
   });
 
-  // Cutter OD değişince Pipe OD ile kıyaslama + bağlı kartların >12" alanlarını güncelle
+  // Cutter OD değişince Pipe OD ile kıyaslama + bağlı kartların >12" alanlarını güncelle + et kalınlığı otodoldur
   document.querySelectorAll('.sel-cutterOd').forEach(sel => {
     sel.addEventListener('change', () => {
       validateCutterVsPipe(sel);
       updateConditionalFields();
+      autofillCutterWall(sel);
     });
   });
 
@@ -360,7 +361,7 @@ function autofillCutterWall(cutterSelect) {
   const row = getAllCutterData().find(r => r.cutter_nominal_inch === nominal);
   if (!row?.cutter_wall_mm) return;
   const wallInput = document.getElementById('cutterWall-' + opId);
-  if (wallInput && !wallInput.value) {
+  if (wallInput) {
     wallInput.value = row.cutter_wall_mm;
   }
 }
