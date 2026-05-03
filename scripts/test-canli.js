@@ -78,7 +78,7 @@ async function waitForAppReady(page, timeout = 18000) {
 
 // Mevcut oturumu koruyarak uygulamayı yeniden yükler ve Adım 1'e getirir
 async function gotoFreshCalc(page) {
-  await page.goto(APP_URL, { waitUntil: 'domcontentloaded' });
+  await page.goto(APP_URL, { waitUntil: 'networkidle' });
   await waitForAppReady(page);
   await page.waitForSelector('#step-project:not(.hidden)', { timeout: 8000 });
 }
@@ -132,7 +132,7 @@ async function fillHottap(page, projeNo) {
   await page.check('#op-hottap');
   await page.click('#btnStep1Next');
   await page.waitForSelector('#step-data:not(.hidden)', { timeout: 6000 });
-  const opCard = await page.waitForSelector('.op-card[data-op-type="hottap"]', { timeout: 6000 });
+  const opCard = await page.waitForSelector('.op-card[data-op-type="hottap"][data-op-id]', { timeout: 8000 });
   const opId = await opCard.getAttribute('data-op-id');
   await page.selectOption(`#pipeOd-${opId}`, { index: 1 });
   await page.selectOption(`#cutterOd-${opId}`, { index: 1 });
@@ -581,10 +581,10 @@ async function kat5(page) {
     await page.check('#op-hottap');
     await page.click('#btnStep1Next');
     await page.waitForSelector('#step-data:not(.hidden)', { timeout: 6000 });
-    const opCard = await page.waitForSelector('.op-card[data-op-type="hottap"]', { timeout: 6000 });
+    const opCard = await page.waitForSelector('.op-card[data-op-type="hottap"][data-op-id]', { timeout: 8000 });
     const opId = await opCard.getAttribute('data-op-id');
-    await page.selectOption(`#pipeOd-${opId}`, { index: 0 });
-    await page.selectOption(`#cutterOd-${opId}`, { index: 0 });
+    await page.selectOption(`#pipeOd-${opId}`, { index: 1 });
+    await page.selectOption(`#cutterOd-${opId}`, { index: 1 });
     await page.fill(`#cutterWall-${opId}`, '8.0');
     await page.fill(`#fieldA-${opId}`, '150.0');
     await page.click('#btnStep2Next');
@@ -604,7 +604,7 @@ async function kat5(page) {
     await page.check('#op-hottap');
     await page.click('#btnStep1Next');
     await page.waitForSelector('#step-data:not(.hidden)', { timeout: 6000 });
-    const opCard = await page.waitForSelector('.op-card[data-op-type="hottap"]', { timeout: 6000 });
+    const opCard = await page.waitForSelector('.op-card[data-op-type="hottap"][data-op-id]', { timeout: 8000 });
     const opId = await opCard.getAttribute('data-op-id');
     const opts = await page.$$(`#pipeOd-${opId} option`);
     await page.selectOption(`#pipeOd-${opId}`, { index: opts.length - 1 });
@@ -628,7 +628,7 @@ async function kat5(page) {
     await page.check('#op-hottap');
     await page.click('#btnStep1Next');
     await page.waitForSelector('#step-data:not(.hidden)', { timeout: 6000 });
-    const opCard = await page.waitForSelector('.op-card[data-op-type="hottap"]', { timeout: 6000 });
+    const opCard = await page.waitForSelector('.op-card[data-op-type="hottap"][data-op-id]', { timeout: 8000 });
     const opId = await opCard.getAttribute('data-op-id');
     await page.selectOption(`#pipeOd-${opId}`, { index: 1 });
     await page.selectOption(`#cutterOd-${opId}`, { index: 1 });
@@ -690,7 +690,7 @@ async function kat6(page) {
     const ad = 'Adım 2 → Adım 3 → Geri → Adım 2 form değerleri korunur';
     await page.click('#btnStep1Next');
     await page.waitForSelector('#step-data:not(.hidden)', { timeout: 6000 });
-    const opCard = await page.waitForSelector('.op-card[data-op-type="hottap"]', { timeout: 6000 });
+    const opCard = await page.waitForSelector('.op-card[data-op-type="hottap"][data-op-id]', { timeout: 8000 });
     const opId = await opCard.getAttribute('data-op-id');
     const TEST_A = '299.99';
     await page.selectOption(`#pipeOd-${opId}`, { index: 1 });
@@ -830,10 +830,11 @@ async function kat8(page) {
     );
     const btnMetin = await page.textContent('#btnSaveCalc');
     if (!btnMetin.includes('Revize')) throw new Error(`Beklenen buton metni yok: "${btnMetin}"`);
-    // Hesapla + Kaydet
-    const calcBtn = await page.waitForSelector('[data-calculate-op]', { timeout: 6000 });
+    // startRevize async tamamlanmasını bekle, sonra hesapla
+    await page.waitForTimeout(2000);
+    const calcBtn = await page.waitForSelector('[data-calculate-op]', { timeout: 12000 });
     await calcBtn.click();
-    await page.waitForSelector('.result-block', { timeout: 10000 });
+    await page.waitForSelector('.result-block', { timeout: 15000 });
     await page.click('#btnSaveCalc');
     await page.waitForFunction(
       () => [...document.querySelectorAll('.toast')].some(t => t.textContent.includes('kaydedildi')),
@@ -960,9 +961,10 @@ async function kat10(page) {
     await page.check('#op-hottap');
     await page.click('#btnStep1Next');
     await page.waitForSelector('#step-data:not(.hidden)', { timeout: 6000 });
-    const opCard = await page.waitForSelector('.op-card[data-op-type="hottap"]', { timeout: 6000 });
+    const opCard = await page.waitForSelector('.op-card[data-op-type="hottap"][data-op-id]', { timeout: 8000 });
     const opId = await opCard.getAttribute('data-op-id');
-    await page.fill(`#fieldA-${opId}`, 'abc');
+    // page.type() gerçek tuş olayları gönderir — type=number alanı harfleri filtreler
+    await page.type(`#fieldA-${opId}`, 'abc');
     await page.waitForTimeout(500);
     const val = await page.inputValue(`#fieldA-${opId}`);
     if (val === 'abc') throw new Error('Sayısal alan harfi kabul etti!');
@@ -978,7 +980,7 @@ async function kat10(page) {
     await page.check('#op-hottap');
     await page.click('#btnStep1Next');
     await page.waitForSelector('#step-data:not(.hidden)', { timeout: 6000 });
-    const opCard = await page.waitForSelector('.op-card[data-op-type="hottap"]', { timeout: 6000 });
+    const opCard = await page.waitForSelector('.op-card[data-op-type="hottap"][data-op-id]', { timeout: 8000 });
     const opId = await opCard.getAttribute('data-op-id');
     await page.fill(`#fieldA-${opId}`, '317.5');
     await page.click('#btnStep2Next');
@@ -997,7 +999,7 @@ async function kat10(page) {
     await page.check('#op-hottap');
     await page.click('#btnStep1Next');
     await page.waitForSelector('#step-data:not(.hidden)', { timeout: 6000 });
-    const opCard = await page.waitForSelector('.op-card[data-op-type="hottap"]', { timeout: 6000 });
+    const opCard = await page.waitForSelector('.op-card[data-op-type="hottap"][data-op-id]', { timeout: 8000 });
     const opId = await opCard.getAttribute('data-op-id');
     await page.selectOption(`#pipeOd-${opId}`, { index: 1 });
     await page.selectOption(`#cutterOd-${opId}`, { index: 1 });
