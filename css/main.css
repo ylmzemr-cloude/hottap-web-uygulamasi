@@ -10,16 +10,16 @@
   --color-error:        #B2533E;
   --color-bg:           #f7f6f2;
   --color-card:         #f5fbfa;
-  --color-border:       #dcd9d0;
+  --color-border:       #9e9890;
   --color-text:         #1a1614;
-  --color-text-muted:   #6b6560;
+  --color-text-muted:   #484340;
   --color-result:       #186F65;
   --color-demo-badge:   #B2533E;
 
   --radius: 8px;
   --radius-lg: 12px;
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
-  --shadow-md: 0 4px 12px rgba(0,0,0,0.10);
+  --shadow-sm: 0 1px 4px rgba(0,0,0,0.14);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.18);
 
   --header-h: 56px;
   --nav-h: 48px;
@@ -482,7 +482,7 @@ a { color: var(--color-primary); }
 
 .steps-list li {
   padding: 2px 0;
-  border-top: 1px solid rgba(0,0,0,0.04);
+  border-top: 1px solid rgba(0,0,0,0.10);
 }
 .steps-list li:first-child { border-top: none; }
 
