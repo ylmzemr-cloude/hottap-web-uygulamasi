@@ -13,114 +13,100 @@
     "note": "Zorunlu alan. Gün/Ay/Yıl formatında girilir.",
     "image": "operasyon_tarihi.png"
   },
-  "PipeOD": {
+  "pipeOd": {
     "title": "Pipe OD — Boru Dış Çapı",
     "text": "Operasyon yapılacak borunun nominal (katalog) dış çapı. Tablodan seçilir; seçim yapıldığında Pipe ID ve et kalınlığı otomatik dolar.",
     "unit": "inç (nominal)",
     "note": "Sadece tabloda kayıtlı çaplar seçilebilir.",
     "image": "pipe_od.png"
   },
-  "CutterOD": {
+  "cutterOd": {
     "title": "Cutter OD — Cutter Nominal Çapı",
     "text": "Delme işleminde kullanılan cutter'ın nominal çapı. Tablodan seçilir; seçimden sonra gerçek (actual) cutter çapı otomatik dolar. Cutter OD, Pipe OD'yi geçemez.",
     "unit": "inç (nominal)",
     "note": "Stopple operasyonunda Cutter OD = Pipe OD zorunludur.",
     "image": "cutter_od.png"
   },
-  "CutterWall": {
+  "cutterWall": {
     "title": "Cutter Et Kalınlığı",
     "text": "Cutter gövdesinin et (duvar) kalınlığı. Bu değer SADECE mm cinsinden girilir.",
     "unit": "mm (sabit)",
     "note": "İnç seçeneği yoktur — her zaman mm giriniz.",
     "image": "cutter_et.png"
   },
-  "A": {
+  "a": {
     "title": "A — Pilot Ucundan Adaptör Yüzeyine",
     "text": "Hot Tap operasyonunda A ölçüsü, delme makinesinin mili tamamen geri çekilmiş durumdayken pilot matkap ucunun ucu ile makine adaptör flanş yüzeyi arasındaki mesafeyi ifade eder. Bu teknik veri, delme işlemi başlamadan önce kesicinin boruya kadar katettiği boşluk miktarını belirleyen \"indirme mesafesinin\" (lower-in distance) doğru şekilde hesaplanması için kullanılır.",
     "unit": "mm veya inç",
     "note": "Pozitif değer girilir.",
     "image": "olcu_A.png"
   },
-  "B": {
+  "b": {
     "title": "B — Adaptör Yüzeyinden Vana Alt Yüzeyine",
     "text": "Hot Tap operasyonunda B ölçüsü, tapping vanasının üst yüzeyinden (conta dahil), delinecek olan ana borunun sırtına (en üst noktasına) kadar olan toplam dikey mesafeyi ifade eder. Bu teknik ölçüm, kesicinin boruya temas edene kadar boşlukta katettiği \"indirme mesafesinin\" (lower-in distance) hesaplanması için A ölçüsü ile toplanarak kullanılır.",
     "unit": "mm veya inç",
     "note": "Pozitif değer girilir.",
     "image": "olcu_B.png"
   },
-  "Ref1": {
+  "ref1": {
     "title": "Ref1 — Pilot Ucundan Cutter Kesme Yüzeyine",
-    "text": "Hot Tap operasyonunda Ref1, dairesel kesicinin dişleri ile pilot matkabın uç noktası arasındaki dikey mesafe farkını temsil eden kritik bir referans ölçüsüdür. Bu teknik değer, pilotun boruya temasından itibaren kesicinin boru duvarını tamamen temizlemesi için gereken toplam delme mesafesinin (C) hesaplanmasında $C = C1 + Ref1$ formülüyle temel bir bileşen olarak kullanılır.",
+    "text": "Hot Tap operasyonunda Ref1, dairesel kesicinin dişleri ile pilot matkabın uç noktası arasındaki dikey mesafe farkını temsil eden kritik bir referans ölçüsüdür. Bu teknik değer, pilotun boruya temasından itibaren kesicinin boru duvarını tamamen temizlemesi için gereken toplam delme mesafesinin (C) hesaplanmasında C = C1 + Ref1 formülüyle temel bir bileşen olarak kullanılır.",
     "unit": "mm veya inç",
     "note": "Negatif değer alabilir — eksi işaretiyle giriniz.",
     "image": "olcu_Ref1.png"
   },
-  "D": {
+  "d": {
     "title": "D — Stopple Referans Ölçüsü",
-    "text": "Stopple operasyonunda D ölçüsü, tıkama makinesinin mili (control bar) tamamen geri çekilmiş durumdayken, makine gövde flanş yüzeyi ile milin en alt ucu (control bar head) arasındaki dikey ofset mesafesini ifade eder. Bu sabit teknik değer, tıkama kafasının boru içerisinde sızdırmazlık sağlayacağı nihai konuma ulaşması için gereken \"Toplam Set\" (Total Set) mesafesinin hesaplanmasında $D + B + E$ formülünün temel bir bileşeni olarak kullanılır",
+    "text": "Stopple operasyonunda D ölçüsü, tıkama makinesinin mili (control bar) tamamen geri çekilmiş durumdayken, makine gövde flanş yüzeyi ile milin en alt ucu (control bar head) arasındaki dikey ofset mesafesini ifade eder. Bu sabit teknik değer, tıkama kafasının boru içerisinde sızdırmazlık sağlayacağı nihai konuma ulaşması için gereken \"Toplam Set\" (Total Set) mesafesinin hesaplanmasında D + B + E formülünün temel bir bileşeni olarak kullanılır.",
     "unit": "mm veya inç",
     "note": "Pozitif değer girilir.",
     "image": "olcu_D.png"
   },
-  "Ref2": {
+  "ref2": {
     "title": "Ref2 — Stopple Teker Referansı",
     "text": "Stopple operasyonunda Ref2, sızdırmazlık elemanı takılı ve tıkama kafası tamamen geri çekilmiş durumdayken kafadaki tekerlek (roller) ile makine gövde flanş yüzeyi arasındaki dikey ofset mesafesini ifade eder. Bu teknik değer, tıkama kafasının boru eksenine tam hizalanması (Centerline) ve süpürme işlemi için boru taban noktasının (Roller to Bottom) doğru hesaplanmasında temel bileşen olarak kullanılır.",
     "unit": "mm veya inç",
     "note": "Negatif değer alabilir — eksi işaretiyle giriniz.",
     "image": "olcu_Ref2.png"
   },
-  "G": {
+  "g": {
     "title": "G — Tapalama Referans Ölçüsü 1",
     "text": "Tapalama operasyonunda G ölçüsü, makine mili tamamen geri çekilmiş durumdayken tapanın en alt yüzeyi ile makine adaptör flanş yüzeyi arasındaki dikey ofset mesafesini ifade eder. Bu teknik değer, tapanın fitting içindeki kilit segmentlerine tam olarak hizalanmasını sağlayan \"Tapalama Set\" (Total Set) mesafesinin hesaplanmasında temel bir veri olarak kullanılır.",
     "unit": "mm veya inç",
     "note": "Pozitif değer girilir.",
     "image": "olcu_G.png"
   },
-  "H": {
+  "h": {
     "title": "H — Tapalama Referans Ölçüsü 2",
     "text": "Tapalama (Completion Plug Setting) operasyonunda H ölçüsü, tapping vanasının üst yüzeyinden (conta dahil), fitting içerisindeki oturtma omzuna (seating shoulder) veya kilit segmentlerinin üstüne kadar olan dikey mesafeyi temsil eder. Bu teknik saha ölçümü, tapanın fitting içindeki kilit mekanizmasıyla tam olarak hizalanmasını sağlayan \"Toplam Set\" (Total Set) mesafesinin hesaplanmasında kullanılan temel verilerden biridir.",
     "unit": "mm veya inç",
     "note": "Pozitif değer girilir.",
     "image": "olcu_H.png"
   },
-  "Y": {
-    "title": "Y — Yay Baskısı (Spring Travel)",
+  "yay": {
+    "title": "Yay Seyahati (Spring Travel)",
     "text": "Cutter mekanizmasındaki yayın serbest seyahat mesafesi. 12 inç ve altı cutter için tablodan otomatik gelir.",
     "unit": "mm (tablodan otomatik)",
     "note": "12 inç üzeri cutter için bu değer yoktur; bunun yerine F girilir.",
     "image": "olcu_Y.png"
   },
-  "F": {
+  "f": {
     "title": "F — Tapalama Ek Ölçüsü (12 inç üzeri)",
-    "text": "Tapalama (LOCK-O-RING®) operasyonunda F ölçüsü, tapanın en alt yüzeyinden üzerindeki kilitleme kanalının (groove) üst kenarına kadar olan dikey sabit mesafeyi ifade eder. 12 inç ve üzeri büyük çaplı operasyonlarda (1200 serisi) kullanılan bu ölçü, tapanın fitting içindeki kilit segmentlerine tam olarak hizalanmasını sağlamak için hesaplama formülünde yay ilerlemesi yerine bir geometrik bileşen olarak yer alır.",
+    "text": "Tapalama (LOCK-O-RING) operasyonunda F ölçüsü, tapanın en alt yüzeyinden üzerindeki kilitleme kanalının (groove) üst kenarına kadar olan dikey sabit mesafeyi ifade eder. 12 inç ve üzeri büyük çaplı operasyonlarda (1200 serisi) kullanılan bu ölçü, tapanın fitting içindeki kilit segmentlerine tam olarak hizalanmasını sağlamak için hesaplama formülünde yay ilerlemesi yerine bir geometrik bileşen olarak yer alır.",
     "unit": "mm veya inç",
     "note": "Sadece 12 inç üzeri cutter için görünür.",
     "image": "olcu_F.png"
   },
-  "KKM": {
-    "title": "KKM — Kalan Kesim Mesafesi",
-    "text": "Delme sırasında anlık olarak ölçülen kalan kesim mesafesi. Bu alan SADECE inç cinsinden girilir.",
-    "unit": "inç (sabit)",
-    "note": "Delme süresi hesabı opsiyoneldir.",
-    "image": "olcu_KKM.png"
-  },
-  "TS": {
-    "title": "TS — Tur Sayısı",
-    "text": "Delme makinasının şu anki konumundaki sayım (tur adedi). KKM ile birlikte kalan tur sayısını hesaplamak için kullanılır.",
-    "unit": "tur (adet)",
-    "note": "Delme süresi hesabı opsiyoneldir.",
-    "image": "olcu_TS.png"
-  },
-  "M": {
+  "m": {
     "title": "M — Vana Üstünden Tapa Tutucu Alt Yüzüne",
-    "text": "Tapa geri alma (re-entry) operasyonunda M ölçüsü, delme makinesinin mili tamamen geri çekilmiş durumdayken tapping vanasının üst yüzeyinden tapa tutucunun (plug holder) en alt ucuna kadar olan dikey mesafeyi ifade eder,,. Bu teknik veri, hattan geri alınacak tapanın üzerindeki kare yuvaya (recess) tam olarak ulaşmak için gereken toplam ilerleme mesafesinin ($M + N + \\text{Yay}$) hesaplanmasında temel bir ofset değeri olarak kullanılır,,.",
+    "text": "Tapa geri alma (re-entry) operasyonunda M ölçüsü, delme makinesinin mili tamamen geri çekilmiş durumdayken tapping vanasının üst yüzeyinden tapa tutucunun (plug holder) en alt ucuna kadar olan dikey mesafeyi ifade eder. Bu teknik veri, hattan geri alınacak tapanın üzerindeki kare yuvaya (recess) tam olarak ulaşmak için gereken toplam ilerleme mesafesinin hesaplanmasında temel bir ofset değeri olarak kullanılır.",
     "unit": "mm veya inç",
     "note": "Geri alma hesabı opsiyoneldir.",
     "image": "olcu_M.png"
   },
-  "N": {
+  "n": {
     "title": "N — Vana Üstünden Tamamlama Tapası Yuvasına",
-    "text": "Tapa geri alma (re-entry) operasyonunda N ölçüsü, tapping vanasının üst yüzeyinden, boru hattı içindeki tapanın üzerinde bulunan kare yuvanın (recess) dibine kadar olan dikey mesafeyi ifade eder. Bu ölçüm, tapa tutucunun (plug holder) tapanın üzerindeki yuvaya tam olarak ulaşmasını ve kavramasını sağlayan toplam ilerleme mesafesinin ($M + N + \\text{Yay}$) hesaplanmasında temel bir veri olarak kullanılır.",
+    "text": "Tapa geri alma (re-entry) operasyonunda N ölçüsü, tapping vanasının üst yüzeyinden, boru hattı içindeki tapanın üzerinde bulunan kare yuvanın (recess) dibine kadar olan dikey mesafeyi ifade eder. Bu ölçüm, tapa tutucunun (plug holder) tapanın üzerindeki yuvaya tam olarak ulaşmasını ve kavramasını sağlayan toplam ilerleme mesafesinin hesaplanmasında temel bir veri olarak kullanılır.",
     "unit": "mm veya inç",
     "note": "Geri alma hesabı opsiyoneldir.",
     "image": "olcu_N.png"
