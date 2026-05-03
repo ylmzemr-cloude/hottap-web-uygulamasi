@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bymey-hottap-v5';
+const CACHE_NAME = 'bymey-hottap-v6';
 
 const PRECACHE_URLS = [
   '/',
