@@ -855,17 +855,24 @@ async function saveCalculation() {
     }
 
     const revizeNo = state.editingCalc?.revize_no || 1;
-    const pdfBlob  = await generatePDF({
-      projeNo:         state.projeNo,
-      operasyonTarihi: state.operasyonTarihi,
-      kullanici:       currentUser.profile.ad_soyad,
-      operations:      state.operations,
-      results:         state.results,
-      images:          imageUrls,
-      revize_no:       revizeNo,
-      revize_aciklama: state.editingCalc?.revize_aciklama,
-      isAdmin:         currentUser?.profile?.rol === 'admin',
-    });
+    let pdfBlob = null;
+    let pdfOk   = false;
+    try {
+      pdfBlob = await generatePDF({
+        projeNo:         state.projeNo,
+        operasyonTarihi: state.operasyonTarihi,
+        kullanici:       currentUser.profile.ad_soyad,
+        operations:      state.operations,
+        results:         state.results,
+        images:          imageUrls,
+        revize_no:       revizeNo,
+        revize_aciklama: state.editingCalc?.revize_aciklama,
+        isAdmin:         currentUser?.profile?.rol === 'admin',
+      });
+      pdfOk = true;
+    } catch (pdfErr) {
+      console.warn('PDF üretilemedi:', pdfErr.message);
+    }
 
     if (savedCalcId && navigator.onLine && pdfBlob) {
       try {
@@ -887,7 +894,7 @@ async function saveCalculation() {
     document.getElementById('btnSaveCalc').textContent = 'Kaydet ve PDF İndir';
 
     if (savedToServer) {
-      showToast('Hesaplama kaydedildi ve PDF indirildi!', 'success');
+      showToast(pdfOk ? 'Hesaplama kaydedildi ve PDF indirildi!' : 'Hesaplama kaydedildi.', 'success');
       setTimeout(() => {
         document.querySelector('.nav-btn[data-view="history"]').click();
       }, 2000);

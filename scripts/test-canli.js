@@ -406,8 +406,17 @@ async function kat2(page) {
     ok(ad);
   } catch (e) { fail('Admin "Sil" → kullanıcı "erişim engellendi" mesajı görür', e); }
 
-  // 2.7 Restore — mevcut değil
-  skip('Silinen kullanıcıyı geri getir (Restore)', 'Özellik henüz uygulanmamış — UI\'da buton yok');
+  // 2.7 Restore (API)
+  try {
+    const ad = 'Admin "Geri Getir" → kullanıcı tekrar giriş yapabilir';
+    const adminToken = await getAdminToken();
+    const u = await apiGetUserByEmail(adminToken, lcSil);
+    if (!u) throw new Error(`${lcSil} bulunamadı`);
+    await apiUpdateUser(adminToken, u.id, { onay_durumu: 'onaylandi', rol: 'tam_kullanici' });
+    await loginAs(page, lcSil, 'Test1234!');
+    if (!page.url().includes('app.html')) throw new Error('Geri getirilen kullanıcı giriş yapamadı');
+    ok(ad);
+  } catch (e) { fail('Admin "Geri Getir" → kullanıcı tekrar giriş yapabilir', e); }
 }
 
 
@@ -423,8 +432,9 @@ async function kat3(page) {
   // 3.1
   try {
     const ad = 'Kullanıcı → Admin mesaj gönder → başarı alert görünür';
+    await page.waitForSelector('[data-view="message"]', { state: 'visible', timeout: 10000 });
     await page.click('[data-view="message"]');
-    await page.waitForSelector('#messageText', { timeout: 10000 });
+    await page.waitForSelector('#messageText', { state: 'visible', timeout: 20000 });
     await page.fill('#messageText', 'Otomatik test mesajı — KAT-3 kontrol.');
     await page.click('#btnSendMessage');
     await page.waitForFunction(
